@@ -4,3 +4,5 @@
 output
 .*.swp
 .*.swo
+/log/
+.idea/

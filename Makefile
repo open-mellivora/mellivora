@@ -11,7 +11,7 @@ GOBUILD := $(GO) build
 GOTEST  := $(GO) test -gcflags="-N -l"
 GOPKGS  := $$($(GO) list ./...| grep -vE "vendor")
 
-# test cover files
+# record cover files
 COVPROF := $(HOMEDIR)/covprof.out  # coverage profile
 COVFUNC := $(HOMEDIR)/covfunc.txt  # coverage profile information for each function
 COVHTML := $(HOMEDIR)/covhtml.html # HTML representation of coverage profile
@@ -38,7 +38,7 @@ compile: build
 build:
 	$(GOBUILD) -o $(HOMEDIR)/wangyufeng04
 
-# make test, test your code
+# make record, record your code
 test: prepare test-case
 test-case:
 	$(GOTEST) -v -cover $(GOPKGS)
