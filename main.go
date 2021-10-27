@@ -18,6 +18,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"os"
 	"time"
 
@@ -37,48 +38,58 @@ import (
 	"icode.baidu.com/baidu/goodcoder/wangyufeng04/spider"
 )
 
-const serviceName = "mini_spider"
+const (
+	Version     = "v1.0"
+	ServiceName = "mini_spider"
+)
 
 var (
-	_          = flag.String("v", "", "版本")
+	version    = flag.Bool("v", false, "版本")
 	configPath = flag.String("c", "conf", "配置文件路径")
 	logPath    = flag.String("l", "log", "日志文件路径")
-	_          = flag.String("h", "", "帮助")
+	help       = flag.Bool("h", false, "帮助")
 )
 
 // main the function where execution of the program begins
 func main() {
 	flag.Parse()
+	if *help {
+		flag.PrintDefaults()
+		return
+	}
+
+	if *version {
+		fmt.Println(Version)
+		return
+	}
+
 	var cfg *config.Config
 	var err error
 	if cfg, err = config.ParseConfig(*configPath); err != nil {
-		err = errors.Wrap(err, "打开配置文件失败")
-		panic(err)
+		panic(errors.Wrap(err, "打开配置文件失败"))
 	}
+
 	var (
 		logger          log4go.Logger
 		f               *os.File
 		saverMiddleware *saver.Middleware
 	)
-	if logger, err = log.Create(serviceName,
-		"DEBUG", *logPath, true,
-		"MIDNIGHT", 0); err != nil {
-		err = errors.Wrap(err, "日志组建初始化失败")
-		panic(err)
+
+	if logger, err = log.Create(
+		ServiceName, "DEBUG", *logPath, true, "MIDNIGHT", 0); err != nil {
+		panic(errors.Wrap(err, "日志组建初始化失败"))
 	}
 
 	defer logger.Close()
 	f, err = os.Open(cfg.URLListFile)
 	if err != nil {
-		err = errors.Wrap(err, "打开种子文件失败")
-		panic(err)
+		panic(errors.Wrap(err, "打开种子文件失败"))
 	}
 	defer f.Close()
 	decoder := json.NewDecoder(f)
 	var urls []string
 	if err = decoder.Decode(&urls); err != nil {
-		err = errors.Wrap(err, "配置文件解析失败")
-		panic(err)
+		panic(errors.Wrap(err, "配置文件解析失败"))
 	}
 
 	limiterMiddleware := downlimiter.NewMiddleware(&downlimiter.Config{
@@ -89,13 +100,11 @@ func main() {
 		MaxDepth:                    cfg.MaxDepth,
 	})
 
-	saverMiddleware, err = saver.NewMiddleware(&saver.Config{
+	if saverMiddleware, err = saver.NewMiddleware(&saver.Config{
 		Dir:     cfg.OutputDirectory,
 		Pattern: cfg.TargetURL,
-	})
-	if err != nil {
-		err = errors.Wrap(err, "初始化存储程序失败")
-		panic(err)
+	}); err != nil {
+		panic(errors.Wrap(err, "初始化存储程序失败"))
 	}
 
 	engine := core.NewEngine()
