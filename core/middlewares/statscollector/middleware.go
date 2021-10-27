@@ -19,6 +19,7 @@ func NewMiddleware() *Middleware {
 	}
 }
 
+// Next implement core.Middleware.Next
 func (s *Middleware) Next(handleFunc core.HandleFunc) core.HandleFunc {
 	return func(c *core.Context) error {
 		domain := fmt.Sprint(c.GetRequest().URL.Host)
@@ -39,32 +40,33 @@ func (s *Middleware) Next(handleFunc core.HandleFunc) core.HandleFunc {
 	}
 }
 
+// Close implement core.Closer
 func (s *Middleware) Close(c *core.Engine) {
-	sortKVS := SortKVs{}
+	sortkvs := sortKVS{}
 	s.groupCollector.Range(func(key, value interface{}) bool {
-		sortKVS = append(sortKVS, KV{key: fmt.Sprint(key), value: value.(*Collector).i})
+		sortkvs = append(sortkvs, kv{key: fmt.Sprint(key), value: value.(*Collector).i})
 		return true
 	})
-	sort.Sort(sortKVS)
+	sort.Sort(sortkvs)
 	msgs := []string{"Dumping Spider Stats:"}
-	for _, item := range sortKVS {
+	for _, item := range sortkvs {
 		msgs = append(msgs, fmt.Sprintf("'%v': %v", item.key, item.value))
 	}
 	c.Logger().Info(strings.Join(msgs, "\n"))
 }
 
-type KV struct {
+type kv struct {
 	key   string
 	value interface{}
 }
 
-type SortKVs []KV
+type sortKVS []kv
 
-func (s SortKVs) Len() int {
+func (s sortKVS) Len() int {
 	return len(s)
 }
 
-func (s SortKVs) Less(i, j int) bool {
+func (s sortKVS) Less(i, j int) bool {
 	leftKey := s[i].key
 	rightKey := s[j].key
 	leftLen := len(leftKey)
@@ -85,6 +87,6 @@ func (s SortKVs) Less(i, j int) bool {
 	return leftKey < rightKey
 }
 
-func (s SortKVs) Swap(i, j int) {
+func (s sortKVS) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }

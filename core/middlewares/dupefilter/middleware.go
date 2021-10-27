@@ -21,6 +21,7 @@ func NewMiddleware(cfg *Config) *Middleware {
 	}
 }
 
+// Next implement core.Middleware.Next
 func (d *Middleware) Next(handleFunc core.HandleFunc) core.HandleFunc {
 	return func(c *core.Context) (err error) {
 		u := c.GetRequest().URL.String()

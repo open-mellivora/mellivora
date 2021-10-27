@@ -36,7 +36,7 @@ gomod: set-env
 compile: build
 
 build:
-	$(GOBUILD) -o $(HOMEDIR)/wangyufeng04
+	$(GOBUILD) -o $(HOMEDIR)/mini_spider
 
 # make record, record your code
 test: prepare test-case
@@ -47,8 +47,9 @@ test-case:
 package: package-bin
 package-bin:
 	mkdir -p $(OUTDIR)
-	mv wangyufeng04  $(OUTDIR)/
+	mv mini_spider  $(OUTDIR)/
 	cp -r conf $(OUTDIR)/
+	cp -r data $(OUTDIR)/
 
 # make clean
 clean:

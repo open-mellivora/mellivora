@@ -11,6 +11,7 @@ func NewMiddleware() *Middleware {
 	return &Middleware{}
 }
 
+// Next implement core.Middleware.Next
 func (m *Middleware) Next(handleFunc core.HandleFunc) core.HandleFunc {
 	return func(c *core.Context) (err error) {
 		err = handleFunc(c)

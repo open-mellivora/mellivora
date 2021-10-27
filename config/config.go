@@ -31,6 +31,7 @@ type Config struct {
 	SpiderConfig `gcfg:"spider"`
 }
 
+// ParseConfig 配置解析
 func ParseConfig(filePath string) (cfg *Config, err error) {
 	path := filepath.Join(filePath, configFile)
 	cfg = new(Config)

@@ -28,6 +28,7 @@ type Config struct {
 	MaxDepth int64
 }
 
+// DefaultConfig 默认配置
 var DefaultConfig = &Config{
 	ConcurrentRequests:          10,
 	ConcurrentRequestsPerDomain: 5,
@@ -54,6 +55,7 @@ func NewMiddleware(config *Config) *Middleware {
 	return m
 }
 
+// Next implement core.Middleware.Next
 func (m *Middleware) Next(handleFunc core.HandleFunc) core.HandleFunc {
 	return func(c *core.Context) (err error) {
 		if c.GetDepth() > m.cfg.MaxDepth {

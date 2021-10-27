@@ -25,6 +25,7 @@ func NewMiddleware(f HandlerFunc) *Middleware {
 // HandlerFunc is a function that recovers from the panic `p` by returning an `error`.
 type HandlerFunc func(p interface{}) (err error)
 
+// Next implement core.Middleware.Next
 func (m *Middleware) Next(handleFunc core.HandleFunc) core.HandleFunc {
 	return func(c *core.Context) (err error) {
 		panicked := true
