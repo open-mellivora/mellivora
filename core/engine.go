@@ -67,8 +67,8 @@ func (e *Engine) Run(spider Spider) {
 	}
 
 	logs := make([]string, len(e.middlewares))
-	for _, m := range e.middlewares {
-		logs = append(logs, GetTypeName(m))
+	for i, m := range e.middlewares {
+		logs[i] = GetTypeName(m)
 	}
 
 	e.Logger().Info("Use spider middlewares: \n[%s]", strings.Join(logs, ",\n"))
