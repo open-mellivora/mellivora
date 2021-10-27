@@ -6,6 +6,7 @@ import (
 	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
 )
 
+// Middleware 去重中间件
 type Middleware struct {
 	mapping sync.Map
 	config  *Config

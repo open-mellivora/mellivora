@@ -48,6 +48,7 @@ package: package-bin
 package-bin:
 	mkdir -p $(OUTDIR)
 	mv wangyufeng04  $(OUTDIR)/
+	cp -r conf $(OUTDIR)/
 
 # make clean
 clean:

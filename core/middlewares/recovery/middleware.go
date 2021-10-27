@@ -8,6 +8,7 @@ import (
 	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
 )
 
+// Middleware recovery中间件
 type Middleware struct {
 	recoveryHandlerFunc HandlerFunc
 }

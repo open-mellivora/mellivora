@@ -8,6 +8,7 @@ import (
 	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
 )
 
+// Middleware 状态收集中间件
 type Middleware struct {
 	groupCollector *GroupCollector
 }

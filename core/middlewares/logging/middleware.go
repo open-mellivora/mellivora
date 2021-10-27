@@ -4,6 +4,7 @@ import (
 	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
 )
 
+// Middleware 日志中间件
 type Middleware struct{}
 
 func NewMiddleware() *Middleware {

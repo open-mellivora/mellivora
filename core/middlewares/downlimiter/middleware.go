@@ -8,6 +8,7 @@ import (
 	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
 )
 
+// Middleware 请求限制中间件
 type Middleware struct {
 	cfg                         *Config
 	concurrencyLimiter          *ConcurrencyLimiter
@@ -16,11 +17,15 @@ type Middleware struct {
 }
 
 type Config struct {
-	ConcurrentRequests          int64
+	// ConcurrentRequests 并行限制
+	ConcurrentRequests int64
+	// ConcurrentRequestsPerDomain 每个域名下请求并行限制
 	ConcurrentRequestsPerDomain int64
-	DownloadDelayPerDomain      time.Duration
-	Timeout                     time.Duration
-	MaxDepth                    int64
+	// DownloadDelayPerDomain 每个域名下请求的延时
+	DownloadDelayPerDomain time.Duration
+	// Timeout 请求超时
+	Timeout  time.Duration
+	MaxDepth int64
 }
 
 var DefaultConfig = &Config{

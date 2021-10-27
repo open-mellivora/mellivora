@@ -9,6 +9,7 @@ import (
 	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
 )
 
+// Decoder 自动转response的编码为utf8
 type Decoder struct{}
 
 func NewDecoder() *Decoder {

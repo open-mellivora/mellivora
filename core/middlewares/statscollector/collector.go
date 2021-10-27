@@ -5,10 +5,7 @@ import (
 	"sync/atomic"
 )
 
-type GroupCollector struct {
-	sync.Map
-}
-
+// Collector count收集器
 type Collector struct {
 	i int64
 }
@@ -20,6 +17,11 @@ func NewCollect(i int64) *Collector {
 
 func (c *Collector) Add(i int64) {
 	atomic.AddInt64(&c.i, i)
+}
+
+// GroupCollector 组合的状态收集器
+type GroupCollector struct {
+	sync.Map
 }
 
 func NewGroupCollect() *GroupCollector {
