@@ -132,7 +132,7 @@ func (e *Engine) Shutdown() {
 	signal.Notify(quit, os.Interrupt)
 	go func() {
 		sig := <-quit
-		log.Println("Shutting down, caused by ", sig)
+		log.Println("Shutting down, caused by", sig)
 		close(done)
 	}()
 	<-done

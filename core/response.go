@@ -35,6 +35,7 @@ func (resp *Response) Bytes() (bodyBytes []byte, err error) {
 		if resp.bodyBytes, err = ioutil.ReadAll(resp.Body); err != nil {
 			return
 		}
+		defer resp.Body.Close()
 		resp.Body = ioutil.NopCloser(bytes.NewBuffer(resp.bodyBytes))
 	})
 	return resp.bodyBytes, err
