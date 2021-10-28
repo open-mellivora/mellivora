@@ -66,7 +66,7 @@ func NewDelayGroupLimiter(delay time.Duration) *DelayGroupLimiter {
 
 // Wait 阻塞等待
 func (l *DelayGroupLimiter) Wait(key string) {
-	if l.delay == 0 {
+	if l.delay <= 0 {
 		return
 	}
 	limiter := time.NewTimer(l.delay)

@@ -72,7 +72,7 @@ func (c *Context) SetRequest(req *http.Request) {
 	c.request = req
 }
 
-// SetRequest sets `depth`.
+// SetDepth sets `depth`.
 func (c *Context) SetDepth(depth int64) {
 	if c == nil {
 		return
@@ -80,7 +80,7 @@ func (c *Context) SetDepth(depth int64) {
 	c.setter.Set(depthKey, depth)
 }
 
-// SetRequest returns `depth`.
+// GetDepth returns `depth`.
 func (c *Context) GetDepth() int64 {
 	if c == nil {
 		return 0

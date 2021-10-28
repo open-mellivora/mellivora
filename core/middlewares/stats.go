@@ -37,7 +37,6 @@ func NewStatsCollector() *StatsCollector {
 func (s *StatsCollector) Next(handleFunc core.HandlerFunc) core.HandlerFunc {
 	return func(c *core.Context) error {
 		domain := fmt.Sprint(c.GetRequest().URL.Host)
-		s.groupCollector.Add("request_bytes", c.GetRequest().ContentLength)
 		s.groupCollector.Add("request_count", 1)
 		err := handleFunc(c)
 		s.groupCollector.Add("response_count", 1)

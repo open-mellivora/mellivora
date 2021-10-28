@@ -2,6 +2,7 @@ package core
 
 import (
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"reflect"
@@ -11,7 +12,7 @@ import (
 	"icode.baidu.com/baidu/go-lib/log/log4go"
 )
 
-// Echo is the top-level framework instance.
+// Engine is the top-level framework instance.
 type Engine struct {
 	wg          sync.WaitGroup
 	middlewares []Middleware
@@ -20,7 +21,7 @@ type Engine struct {
 	c           chan struct{}
 }
 
-// New creates an instance of Engine.
+// NewEngine creates an instance of Engine.
 func NewEngine() *Engine {
 	core := &Engine{
 		wg:        sync.WaitGroup{},
@@ -60,11 +61,13 @@ func (e *Engine) applyMiddleware(h HandlerFunc, middlewares ...Middleware) Handl
 
 // Run run a spider.
 func (e *Engine) Run(spider Spider) {
-	for _, m := range e.middlewares {
+	for i := len(e.middlewares) - 1; i >= 0; i-- {
+		m := e.middlewares[i]
 		starter, ok := m.(interface{ Starter })
 		if !ok {
 			continue
 		}
+		e.Logger().Info("Middleware %s Start", getTypeName(m))
 		starter.Start(e)
 	}
 
@@ -74,17 +77,16 @@ func (e *Engine) Run(spider Spider) {
 	}
 
 	e.Logger().Info("Use spider middlewares: \n[%s]", strings.Join(logs, ",\n"))
-
 	go func() {
 		for {
-			task := e.scheduler.BlockPop()
+			task := e.scheduler.Pop()
 			if task == nil {
-				return
+				continue
 			}
 			e.c <- struct{}{}
 			go func(task *Context) {
 				err := task.handler(task)
-				// 考虑在这里增加扩展处理
+				// 考虑在这里增加扩展处理error
 				_ = err
 				<-e.c
 				e.wg.Done()
@@ -93,10 +95,12 @@ func (e *Engine) Run(spider Spider) {
 	}()
 	spider.StartRequests(e)
 	c := make(chan struct{})
+	// wait shutdown
 	go func() {
 		e.Shutdown()
 		c <- struct{}{}
 	}()
+	// wait task done
 	go func() {
 		e.wg.Wait()
 		c <- struct{}{}
@@ -108,13 +112,17 @@ func (e *Engine) Run(spider Spider) {
 // Close immediately stops the server.
 func (e *Engine) Close() {
 	e.scheduler.Close()
-	for _, m := range e.middlewares {
+	e.Logger().Info("Scheduler Closed")
+	for i := len(e.middlewares) - 1; i >= 0; i-- {
+		m := e.middlewares[i]
 		closer, ok := m.(Closer)
 		if !ok {
 			continue
 		}
 		closer.Close(e)
+		e.Logger().Info("Middleware %s Closed", getTypeName(m))
 	}
+	e.Logger().Info("Engine Closed")
 }
 
 // Shutdown stops the server gracefully.
@@ -133,4 +141,46 @@ func (e *Engine) Shutdown() {
 
 func getTypeName(i interface{}) string {
 	return reflect.TypeOf(i).String()
+}
+
+// Get create a GET request
+func (e *Engine) Get(url string, handler HandlerFunc, options ...RequestOptionsFunc) (err error) {
+	var req *http.Request
+	if req, err = http.NewRequest(http.MethodGet, url, nil); err != nil {
+		return
+	}
+	e.Request(req, handler, options...)
+	return
+}
+
+// Request create a request
+func (e *Engine) Request(r *http.Request, handler HandlerFunc, options ...RequestOptionsFunc) {
+	middlewares := append(e.middlewares, NewDownloader())
+
+	middlewareHandler := e.applyMiddleware(func(c *Context) error {
+		return nil
+	}, middlewares...)
+
+	ctx := NewContext(e, r, func(c *Context) error {
+		if err := middlewareHandler(c); err != nil {
+			return err
+		}
+		// 过滤等正常情况导致Response无数据
+		if c.Response == nil {
+			return nil
+		}
+		return handler(c)
+	})
+
+	opt := RequestOptions{}
+	for _, optFunc := range options {
+		optFunc(&opt)
+	}
+
+	if opt.PreContext != nil {
+		ctx.SetDepth(opt.PreContext.GetDepth() + 1)
+	}
+
+	e.wg.Add(1)
+	e.scheduler.Push(ctx)
 }

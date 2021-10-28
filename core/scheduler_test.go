@@ -17,13 +17,21 @@ func BenchmarkLifoScheduler(b *testing.B) {
 	}
 
 	for i := 0; i < b.N; i++ {
-		c := scheduler.BlockPop()
+		c := scheduler.Pop()
 		if c != cs[i] {
 			b.Errorf("c != ctxs[%d]", i)
 		}
 	}
-	scheduler.Close()
-	if scheduler.BlockPop() != nil {
-		b.Errorf("scheduler已关闭")
-	}
+	b.Run("空队列获取", func(b *testing.B) {
+		if scheduler.Pop() != nil {
+			b.Errorf("空队列有数据")
+		}
+	})
+
+	b.Run("关闭后不能获取", func(b *testing.B) {
+		scheduler.Close()
+		if scheduler.Pop() != nil {
+			b.Errorf("scheduler已关闭")
+		}
+	})
 }
