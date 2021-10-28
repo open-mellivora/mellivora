@@ -11,6 +11,7 @@ import (
 	"icode.baidu.com/baidu/go-lib/log/log4go"
 )
 
+// Echo is the top-level framework instance.
 type Engine struct {
 	wg          sync.WaitGroup
 	middlewares []Middleware
@@ -19,6 +20,7 @@ type Engine struct {
 	c           chan struct{}
 }
 
+// New creates an instance of Engine.
 func NewEngine() *Engine {
 	core := &Engine{
 		wg:        sync.WaitGroup{},
@@ -29,22 +31,22 @@ func NewEngine() *Engine {
 	return core
 }
 
-// Use 添加中间件，优先级从左往右
+// Use adds middleware to the chain which is run before spider.
 func (e *Engine) Use(middlewares ...Middleware) {
 	e.middlewares = append(e.middlewares, middlewares...)
 }
 
+// SetLogger sets `log4go.Logger`.
 func (e *Engine) SetLogger(l log4go.Logger) {
 	e.logger = l
 }
 
+// Logger returns `log4go.Logger`.
 func (e *Engine) Logger() log4go.Logger {
 	return e.logger
 }
 
-// applyMiddleware 中间件组合
-// middlewares优先级从左往右
-func (e *Engine) applyMiddleware(h HandleFunc, middlewares ...Middleware) HandleFunc {
+func (e *Engine) applyMiddleware(h HandlerFunc, middlewares ...Middleware) HandlerFunc {
 	for i := len(middlewares) - 1; i >= 0; i-- {
 		m := middlewares[i]
 		handle := m.Next(h)
@@ -56,7 +58,7 @@ func (e *Engine) applyMiddleware(h HandleFunc, middlewares ...Middleware) Handle
 	return h
 }
 
-// Run 阻塞运行spider
+// Run run a spider.
 func (e *Engine) Run(spider Spider) {
 	for _, m := range e.middlewares {
 		starter, ok := m.(interface{ Starter })
@@ -68,7 +70,7 @@ func (e *Engine) Run(spider Spider) {
 
 	logs := make([]string, len(e.middlewares))
 	for i, m := range e.middlewares {
-		logs[i] = GetTypeName(m)
+		logs[i] = getTypeName(m)
 	}
 
 	e.Logger().Info("Use spider middlewares: \n[%s]", strings.Join(logs, ",\n"))
@@ -103,6 +105,7 @@ func (e *Engine) Run(spider Spider) {
 	e.Close()
 }
 
+// Close immediately stops the server.
 func (e *Engine) Close() {
 	e.scheduler.Close()
 	for _, m := range e.middlewares {
@@ -114,7 +117,7 @@ func (e *Engine) Close() {
 	}
 }
 
-// Shutdown 捕获退出信号，安全退出
+// Shutdown stops the server gracefully.
 func (e *Engine) Shutdown() {
 	quit := make(chan os.Signal, 1)
 	done := make(chan struct{})
@@ -128,6 +131,6 @@ func (e *Engine) Shutdown() {
 	log.Println("Graceful shutdown.")
 }
 
-func GetTypeName(i interface{}) string {
+func getTypeName(i interface{}) string {
 	return reflect.TypeOf(i).String()
 }

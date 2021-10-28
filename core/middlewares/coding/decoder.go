@@ -17,7 +17,7 @@ func NewDecoder() *Decoder {
 }
 
 // Next implement core.Middleware.Next
-func (p *Decoder) Next(handleFunc core.HandleFunc) core.HandleFunc {
+func (p *Decoder) Next(handleFunc core.HandlerFunc) core.HandlerFunc {
 	return func(c *core.Context) (err error) {
 		if err = handleFunc(c); err != nil {
 			return

@@ -6,7 +6,7 @@ import (
 
 type Downloader struct{}
 
-func (d *Downloader) Next(handler HandleFunc) HandleFunc {
+func (d *Downloader) Next(handler HandlerFunc) HandlerFunc {
 	return func(c *Context) (err error) {
 		if c.Response != nil {
 			return nil

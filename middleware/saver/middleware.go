@@ -57,7 +57,7 @@ func NewMiddleware(config *Config) (mid *Middleware, err error) {
 	return m, err
 }
 
-func (m *Middleware) Next(handleFunc core.HandleFunc) core.HandleFunc {
+func (m *Middleware) Next(handleFunc core.HandlerFunc) core.HandlerFunc {
 	return func(c *core.Context) (err error) {
 		u := c.GetRequest().URL
 		if err = handleFunc(c); err != nil {

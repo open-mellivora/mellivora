@@ -9,12 +9,13 @@ const depthKey depth = iota
 
 type (
 	depth int64
-	// Context 请求处理上下文
+	// Context represents the context of the current HTTP request. It holds request and
+	// response objects, path, path parameters, data and registered handler.
 	Context struct {
 		*Response
 		request    *http.Request
 		core       *Engine
-		handler    HandleFunc
+		handler    HandlerFunc
 		httpClient *http.Client
 		setter
 	}
@@ -36,8 +37,8 @@ func (c *setter) Value(k interface{}) interface{} {
 	return c.ctx.Value(k)
 }
 
-// NewContext create a Context
-func NewContext(core *Engine, request *http.Request, handler HandleFunc) *Context {
+// NewContext returns a Context instance.
+func NewContext(core *Engine, request *http.Request, handler HandlerFunc) *Context {
 	return &Context{
 		request: request,
 		core:    core,
@@ -46,27 +47,32 @@ func NewContext(core *Engine, request *http.Request, handler HandleFunc) *Contex
 	}
 }
 
-// SetHTTPClient 设置http.Client
+// SetHTTPClient sets `*http.Client`.
 func (c *Context) SetHTTPClient(client *http.Client) {
 	c.httpClient = client
 }
 
+// SetResponse sets `*Response`.
 func (c *Context) SetResponse(response *Response) {
 	c.Response = response
 }
 
-func (c *Context) Core() *Engine {
+// Engine returns the `Engine` instance.
+func (c *Context) Engine() *Engine {
 	return c.core
 }
 
+// GetRequest returns `*http.Request`.
 func (c *Context) GetRequest() *http.Request {
 	return c.request
 }
 
+// SetRequest sets `*http.Request`.
 func (c *Context) SetRequest(req *http.Request) {
 	c.request = req
 }
 
+// SetRequest sets `depth`.
 func (c *Context) SetDepth(depth int64) {
 	if c == nil {
 		return
@@ -74,6 +80,7 @@ func (c *Context) SetDepth(depth int64) {
 	c.setter.Set(depthKey, depth)
 }
 
+// SetRequest returns `depth`.
 func (c *Context) GetDepth() int64 {
 	if c == nil {
 		return 0

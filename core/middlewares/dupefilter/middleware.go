@@ -22,7 +22,7 @@ func NewMiddleware(cfg *Config) *Middleware {
 }
 
 // Next implement core.Middleware.Next
-func (d *Middleware) Next(handleFunc core.HandleFunc) core.HandleFunc {
+func (d *Middleware) Next(handleFunc core.HandlerFunc) core.HandlerFunc {
 	return func(c *core.Context) (err error) {
 		u := c.GetRequest().URL.String()
 		_, ok := d.mapping.LoadOrStore(u, struct{}{})

@@ -12,16 +12,16 @@ func NewMiddleware() *Middleware {
 }
 
 // Next implement core.Middleware.Next
-func (m *Middleware) Next(handleFunc core.HandleFunc) core.HandleFunc {
+func (m *Middleware) Next(handleFunc core.HandlerFunc) core.HandlerFunc {
 	return func(c *core.Context) (err error) {
 		err = handleFunc(c)
 		if err != nil {
-			c.Core().Logger().Error("[depth]:%v [url]:%v [error]:%v",
+			c.Engine().Logger().Error("[depth]:%v [url]:%v [error]:%v",
 				c.GetDepth(), c.GetRequest().URL.String(), err)
 			return
 		}
 		statusCode := c.Response.StatusCode
-		c.Core().Logger().Debug("[depth]:%v [url]:%v [status]:%v ",
+		c.Engine().Logger().Debug("[depth]:%v [url]:%v [status]:%v ",
 			c.GetDepth(), c.GetRequest().URL.String(), statusCode)
 		return err
 	}

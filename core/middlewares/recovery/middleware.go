@@ -26,13 +26,13 @@ func NewMiddleware(f HandlerFunc) *Middleware {
 type HandlerFunc func(p interface{}) (err error)
 
 // Next implement core.Middleware.Next
-func (m *Middleware) Next(handleFunc core.HandleFunc) core.HandleFunc {
+func (m *Middleware) Next(handleFunc core.HandlerFunc) core.HandlerFunc {
 	return func(c *core.Context) (err error) {
 		panicked := true
 		defer func() {
 			if r := recover(); r != nil || panicked {
 				err = m.recoveryHandlerFunc(r)
-				c.Core().Logger().Error("Recovery error: %+v", err)
+				c.Engine().Logger().Error("Recovery error: %+v", err)
 			}
 		}()
 

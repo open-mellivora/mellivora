@@ -16,7 +16,7 @@ func TestContext_Set(t *testing.T) {
 
 	c := NewContext(e, req, handler)
 	assert.Equal(t, req, c.GetRequest())
-	assert.Equal(t, e, c.Core())
+	assert.Equal(t, e, c.Engine())
 
 	req = new(http.Request)
 	c.SetRequest(req)

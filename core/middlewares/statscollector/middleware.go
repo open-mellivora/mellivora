@@ -20,7 +20,7 @@ func NewMiddleware() *Middleware {
 }
 
 // Next implement core.Middleware.Next
-func (s *Middleware) Next(handleFunc core.HandleFunc) core.HandleFunc {
+func (s *Middleware) Next(handleFunc core.HandlerFunc) core.HandlerFunc {
 	return func(c *core.Context) error {
 		domain := fmt.Sprint(c.GetRequest().URL.Host)
 		s.groupCollector.Add("request_bytes", c.GetRequest().ContentLength)

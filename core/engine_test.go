@@ -17,7 +17,7 @@ func TestEngine_Run(t *testing.T) {
 	ms.EXPECT().StartRequests(gomock.Any())
 	var result []string
 	c.Use(
-		core.NewMiddleware(func(handleFunc core.HandleFunc) core.HandleFunc {
+		core.NewMiddleware(func(handleFunc core.HandlerFunc) core.HandlerFunc {
 			return func(c *core.Context) error {
 				result = append(result, "1")
 				err := handleFunc(c)
@@ -26,7 +26,7 @@ func TestEngine_Run(t *testing.T) {
 				return err
 			}
 		}),
-		core.NewMiddleware(func(handleFunc core.HandleFunc) core.HandleFunc {
+		core.NewMiddleware(func(handleFunc core.HandlerFunc) core.HandlerFunc {
 			return func(c *core.Context) error {
 				result = append(result, "3")
 				return nil

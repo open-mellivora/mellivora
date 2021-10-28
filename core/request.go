@@ -27,7 +27,7 @@ func DontFilter() RequestOptionsFunc {
 }
 
 // Get 创建一个Get请求
-func (e *Engine) Get(url string, handler HandleFunc, options ...RequestOptionsFunc) (err error) {
+func (e *Engine) Get(url string, handler HandlerFunc, options ...RequestOptionsFunc) (err error) {
 	var req *http.Request
 	if req, err = http.NewRequest(http.MethodGet, url, nil); err != nil {
 		return
@@ -37,7 +37,7 @@ func (e *Engine) Get(url string, handler HandleFunc, options ...RequestOptionsFu
 }
 
 // Request 创建一个请求
-func (e *Engine) Request(r *http.Request, handler HandleFunc, options ...RequestOptionsFunc) {
+func (e *Engine) Request(r *http.Request, handler HandlerFunc, options ...RequestOptionsFunc) {
 	middlewares := append(e.middlewares, NewDownloader())
 
 	middlewareHandler := e.applyMiddleware(func(c *Context) error {

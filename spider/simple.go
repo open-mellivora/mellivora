@@ -38,7 +38,7 @@ func ExtractURL(c *core.Context) (urls []string, err error) {
 	var tokenizer *html.Tokenizer
 	tokenizer, err = c.Tokenizer()
 	if err != nil {
-		c.Core().Logger().Warn("tokenizer error,err:%v,url:%s", err, c.GetRequest().URL.String())
+		c.Engine().Logger().Warn("tokenizer error,err:%v,url:%s", err, c.GetRequest().URL.String())
 		return
 	}
 
@@ -93,8 +93,8 @@ func (s *SimpleSpider) Parse(c *core.Context) (err error) {
 		return
 	}
 	for i := 0; i < len(urls); i++ {
-		if err = c.Core().Get(urls[i], s.Parse, core.WithPreContext(c)); err != nil {
-			c.Core().Logger().Warn("get error,url:%s", urls[i])
+		if err = c.Engine().Get(urls[i], s.Parse, core.WithPreContext(c)); err != nil {
+			c.Engine().Logger().Warn("get error,url:%s", urls[i])
 		}
 	}
 	return
