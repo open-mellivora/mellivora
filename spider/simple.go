@@ -35,8 +35,10 @@ func NewURL(base *url.URL, href string) (*url.URL, error) {
 }
 
 func ExtractURL(c *core.Context) (urls []string, err error) {
-	tokenizer, err := c.Tokenizer()
+	var tokenizer *html.Tokenizer
+	tokenizer, err = c.Tokenizer()
 	if err != nil {
+		c.Core().Logger().Warn("tokenizer error,err:%v,url:%s", err, c.GetRequest().URL.String())
 		return
 	}
 

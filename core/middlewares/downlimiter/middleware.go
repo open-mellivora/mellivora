@@ -73,9 +73,7 @@ func (m *Middleware) Next(handleFunc core.HandleFunc) core.HandleFunc {
 		}()
 		if m.cfg.Timeout != 0 {
 			ctx := req.Context()
-			var cancel context.CancelFunc
-			ctx, cancel = context.WithTimeout(ctx, m.cfg.Timeout)
-			defer cancel()
+			ctx, _ = context.WithTimeout(ctx, m.cfg.Timeout)
 			c.SetRequest(req.WithContext(ctx))
 		}
 		err = handleFunc(c)
