@@ -1,4 +1,4 @@
-package coding
+package middlewares
 
 import (
 	"bytes"
@@ -14,7 +14,7 @@ import (
 	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
 )
 
-func TestDecoder_Next(t *testing.T) {
+func TestDecoder(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "https://baidu.com", nil)
 	c := core.NewContext(nil, req, nil)
 	decoder := NewDecoder()

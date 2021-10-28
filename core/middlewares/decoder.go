@@ -1,4 +1,4 @@
-package coding
+package middlewares
 
 import (
 	"io"
@@ -9,11 +9,26 @@ import (
 	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
 )
 
-// Decoder 自动转response的编码为utf8
-type Decoder struct{}
+// Decoder for decode response body to utf8
+type Decoder struct {
+	config DecoderConfig
+}
 
+// DecoderConfig defines the config for Decoder middleware.
+type DecoderConfig struct{}
+
+// DefaultDecoderConfig is the default Decoder middleware config.
+var DefaultDecoderConfig struct{}
+
+// NewDecoder returns a Decoder instance
 func NewDecoder() *Decoder {
-	return &Decoder{}
+	return NewDecoderWithConfig(DefaultDecoderConfig)
+}
+
+// NewDecoderWithConfig returns a Decoder middleware with config.
+// See: `NewDecoder()`.
+func NewDecoderWithConfig(config DecoderConfig) *Decoder {
+	return &Decoder{config: config}
 }
 
 // Next implement core.Middleware.Next

@@ -1,4 +1,4 @@
-package statscollector
+package middlewares
 
 import (
 	"fmt"
@@ -6,21 +6,35 @@ import (
 	"strings"
 
 	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
+	"icode.baidu.com/baidu/goodcoder/wangyufeng04/library/collector"
 )
 
-// Middleware 状态收集中间件
-type Middleware struct {
-	groupCollector *GroupCollector
+// StatsCollector for collecting scraping stats
+type StatsCollector struct {
+	groupCollector *collector.GroupCollector
 }
 
-func NewMiddleware() *Middleware {
-	return &Middleware{
-		groupCollector: NewGroupCollect(),
+// StatsCollectorConfig defines the config for StatsCollector middleware.
+type StatsCollectorConfig struct{}
+
+// DefaultStatsCollectorConfig is the default StatsCollector middleware config.
+var DefaultStatsCollectorConfig = StatsCollectorConfig{}
+
+// NewStatsCollectorWithConfig returns a StatsCollector middleware with config.
+// See: `NewStatsCollector()`.
+func NewStatsCollectorWithConfig(config StatsCollectorConfig) *StatsCollector {
+	return &StatsCollector{
+		groupCollector: collector.NewGroupCollect(),
 	}
 }
 
-// Next implement core.Middleware.Next
-func (s *Middleware) Next(handleFunc core.HandlerFunc) core.HandlerFunc {
+// NewStatsCollector returns a StatsCollector instance
+func NewStatsCollector() *StatsCollector {
+	return NewStatsCollectorWithConfig(DefaultStatsCollectorConfig)
+}
+
+// Next implement core.StatsCollector.Next
+func (s *StatsCollector) Next(handleFunc core.HandlerFunc) core.HandlerFunc {
 	return func(c *core.Context) error {
 		domain := fmt.Sprint(c.GetRequest().URL.Host)
 		s.groupCollector.Add("request_bytes", c.GetRequest().ContentLength)
@@ -41,15 +55,15 @@ func (s *Middleware) Next(handleFunc core.HandlerFunc) core.HandlerFunc {
 }
 
 // Close implement core.Closer
-func (s *Middleware) Close(c *core.Engine) {
-	sortkvs := sortKVS{}
-	s.groupCollector.Range(func(key, value interface{}) bool {
-		sortkvs = append(sortkvs, kv{key: fmt.Sprint(key), value: value.(*Collector).i})
+func (s *StatsCollector) Close(c *core.Engine) {
+	sorties := sortKVS{}
+	s.groupCollector.Range(func(s string, c *collector.Collector) bool {
+		sorties = append(sorties, kv{key: s, value: c.Count()})
 		return true
 	})
-	sort.Sort(sortkvs)
+	sort.Sort(sorties)
 	msgs := []string{"Dumping Spider Stats:"}
-	for _, item := range sortkvs {
+	for _, item := range sorties {
 		msgs = append(msgs, fmt.Sprintf("'%v': %v", item.key, item.value))
 	}
 	c.Logger().Info(strings.Join(msgs, "\n"))

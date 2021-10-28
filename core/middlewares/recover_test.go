@@ -1,4 +1,4 @@
-package dupefilter
+package middlewares
 
 import (
 	"net/http"
@@ -9,26 +9,20 @@ import (
 	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
 )
 
-func TestMiddleware_Next(t *testing.T) {
+func TestRecover(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "https://baidu.com", nil)
 	c := core.NewContext(core.NewEngine(), req, nil)
-	filter := NewMiddleware(nil)
-	t.Run("未过滤", func(t *testing.T) {
-		var flag bool
+	filter := NewRecover()
+	t.Run("panic", func(t *testing.T) {
 		err := filter.Next(func(c *core.Context) error {
-			flag = true
-			return nil
+			panic("1")
 		})(c)
-		assert.Equal(t, err, nil)
-		assert.Equal(t, flag, true)
+		assert.NotEqual(t, err, nil)
 	})
-	t.Run("过滤", func(t *testing.T) {
-		var flag bool
+	t.Run("not panic", func(t *testing.T) {
 		err := filter.Next(func(c *core.Context) error {
-			flag = true
 			return nil
 		})(c)
 		assert.Equal(t, err, nil)
-		assert.Equal(t, flag, false)
 	})
 }

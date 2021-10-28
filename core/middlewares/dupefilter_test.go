@@ -1,4 +1,4 @@
-package recovery
+package middlewares
 
 import (
 	"net/http"
@@ -12,17 +12,23 @@ import (
 func TestMiddleware_Next(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "https://baidu.com", nil)
 	c := core.NewContext(core.NewEngine(), req, nil)
-	filter := NewMiddleware(nil)
-	t.Run("panic", func(t *testing.T) {
+	filter := NewDupeFilter()
+	t.Run("未过滤", func(t *testing.T) {
+		var flag bool
 		err := filter.Next(func(c *core.Context) error {
-			panic("1")
-		})(c)
-		assert.NotEqual(t, err, nil)
-	})
-	t.Run("not panic", func(t *testing.T) {
-		err := filter.Next(func(c *core.Context) error {
+			flag = true
 			return nil
 		})(c)
 		assert.Equal(t, err, nil)
+		assert.Equal(t, flag, true)
+	})
+	t.Run("过滤", func(t *testing.T) {
+		var flag bool
+		err := filter.Next(func(c *core.Context) error {
+			flag = true
+			return nil
+		})(c)
+		assert.Equal(t, err, nil)
+		assert.Equal(t, flag, false)
 	})
 }

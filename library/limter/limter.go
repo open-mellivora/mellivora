@@ -1,4 +1,4 @@
-package downlimiter
+package limter
 
 import (
 	"sync"

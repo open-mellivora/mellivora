@@ -28,12 +28,7 @@ import (
 
 	"icode.baidu.com/baidu/goodcoder/wangyufeng04/config"
 	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
-	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core/middlewares/coding"
-	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core/middlewares/downlimiter"
-	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core/middlewares/dupefilter"
-	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core/middlewares/logging"
-	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core/middlewares/recovery"
-	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core/middlewares/statscollector"
+	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core/middlewares"
 	"icode.baidu.com/baidu/goodcoder/wangyufeng04/middleware/saver"
 	"icode.baidu.com/baidu/goodcoder/wangyufeng04/spider"
 )
@@ -92,7 +87,7 @@ func main() {
 		panic(errors.Wrap(err, "配置文件解析失败"))
 	}
 
-	limiterMiddleware := downlimiter.NewMiddleware(&downlimiter.Config{
+	limiterMiddleware := middlewares.NewDownLimiterWithConfig(middlewares.DownLimiterConfig{
 		ConcurrentRequests:          cfg.ThreadCount,
 		ConcurrentRequestsPerDomain: cfg.ThreadCount,
 		DownloadDelayPerDomain:      time.Duration(cfg.CrawlInterval * float64(time.Second)),
@@ -110,13 +105,13 @@ func main() {
 	engine := core.NewEngine()
 	engine.SetLogger(logger)
 	engine.Use(
-		dupefilter.NewMiddleware(nil),  // 去重
-		limiterMiddleware,              // 请求限制
-		statscollector.NewMiddleware(), // 状态收集
-		recovery.NewMiddleware(nil),    // panic捕获
-		logging.NewMiddleware(),        // 日志打印
-		saverMiddleware,                // 网页存储
-		coding.NewDecoder(),            // 统一转为utf-8编码
+		middlewares.NewDupeFilter(),     // 去重
+		limiterMiddleware,               // 请求限制
+		middlewares.NewStatsCollector(), // 状态收集
+		middlewares.NewRecover(),        // panic捕获
+		middlewares.NewLogging(),        // 日志打印
+		saverMiddleware,                 // 网页存储
+		middlewares.NewDecoder(),        // 统一转为utf-8编码
 	)
 
 	s := spider.NewSimpleSpider(urls)

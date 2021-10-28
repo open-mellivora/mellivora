@@ -1,4 +1,4 @@
-package downlimiter
+package middlewares
 
 import (
 	"net/http"
@@ -10,8 +10,8 @@ import (
 	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
 )
 
-func TestMiddleware_Next(t *testing.T) {
-	limiter := NewMiddleware(&Config{Timeout: time.Second})
+func TestDownLimiter(t *testing.T) {
+	limiter := NewDownLimiterWithConfig(DownLimiterConfig{Timeout: time.Second})
 	req, _ := http.NewRequest(http.MethodGet, "https://baidu.com", nil)
 	c := core.NewContext(nil, req, nil)
 	err := limiter.Next(func(c *core.Context) error {

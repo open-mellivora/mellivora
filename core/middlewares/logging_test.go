@@ -1,4 +1,4 @@
-package logging
+package middlewares
 
 import (
 	"net/http"
@@ -10,11 +10,11 @@ import (
 	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
 )
 
-func TestMiddleware_Next(t *testing.T) {
+func TestLogging(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "https://baidu.com", nil)
 	e := core.NewEngine()
 	c := core.NewContext(e, req, nil)
-	filter := NewMiddleware()
+	filter := NewLogging()
 	t.Run("记录信息", func(t *testing.T) {
 		err := filter.Next(func(c *core.Context) error {
 			c.SetResponse(core.NewResponse(new(http.Response)))
