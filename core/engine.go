@@ -27,7 +27,7 @@ func NewEngine() *Engine {
 		wg:        sync.WaitGroup{},
 		scheduler: NewLifoScheduler(),
 		logger:    log4go.NewDefaultLogger(log4go.INFO),
-		c:         make(chan struct{}, 128),
+		c:         make(chan struct{}, 32),
 	}
 	return core
 }

@@ -3,11 +3,13 @@ package saver
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
 
+	"github.com/valyala/bytebufferpool"
 	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
 )
 
@@ -15,6 +17,7 @@ type Middleware struct {
 	r            *regexp.Regexp
 	config       *Config
 	OpenFileFunc func(filename string) (io.WriteCloser, error)
+	bytesPool    *bytebufferpool.Pool
 }
 
 // dirCreate checks and creates dir if nonexist
@@ -48,6 +51,7 @@ func NewMiddleware(config *Config) (mid *Middleware, err error) {
 		config:       config,
 		r:            r,
 		OpenFileFunc: config.OpenFileFunc,
+		bytesPool:    &bytebufferpool.Pool{},
 	}
 	if m.OpenFileFunc == nil {
 		m.OpenFileFunc = func(filename string) (io.WriteCloser, error) {
@@ -71,12 +75,6 @@ func (m *Middleware) Next(handleFunc core.HandlerFunc) core.HandlerFunc {
 			return handleFunc(c)
 		}
 
-		var bs []byte
-		bs, err = c.Bytes()
-		if err != nil {
-			return err
-		}
-
 		filename := url.QueryEscape(u.String())
 		path := filepath.Join(m.config.Dir, filename)
 		var f io.WriteCloser
@@ -85,7 +83,15 @@ func (m *Middleware) Next(handleFunc core.HandlerFunc) core.HandlerFunc {
 			return err
 		}
 		defer f.Close()
-		_, err = io.Copy(f, bytes.NewBuffer(bs))
+
+		buf := m.bytesPool.Get()
+		newReader := io.TeeReader(c.Response.Body, buf)
+		c.Response.Body = ioutil.NopCloser(bytes.NewReader(buf.Bytes()))
+		if _, err = io.Copy(f, newReader); err != nil {
+			return
+		}
+
+		m.bytesPool.Put(buf)
 		return
 	}
 }

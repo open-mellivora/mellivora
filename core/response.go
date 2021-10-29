@@ -1,19 +1,15 @@
 package core
 
 import (
-	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"sync"
 
 	"golang.org/x/net/html"
 )
 
 type Response struct {
 	*http.Response
-	bodyBytes    []byte
-	readBodyOnce sync.Once
 }
 
 func NewResponse(response *http.Response) *Response {
@@ -21,30 +17,19 @@ func NewResponse(response *http.Response) *Response {
 }
 
 // Tokenizer get *html.Tokenizer from response.Body
-func (resp *Response) Tokenizer() (tokenizer *html.Tokenizer, err error) {
-	var bs []byte
-	if bs, err = resp.Bytes(); err != nil {
-		return nil, err
-	}
-	return html.NewTokenizer(bytes.NewBuffer(bs)), nil
+func (resp *Response) Tokenizer() (tokenizer *html.Tokenizer) {
+	return html.NewTokenizer(resp.Body)
 }
 
 // Bytes get []byte from response.Body
 func (resp *Response) Bytes() (bodyBytes []byte, err error) {
-	resp.readBodyOnce.Do(func() {
-		if resp.bodyBytes, err = ioutil.ReadAll(resp.Body); err != nil {
-			return
-		}
-		defer resp.Body.Close()
-		resp.Body = ioutil.NopCloser(bytes.NewBuffer(resp.bodyBytes))
-	})
-	return resp.bodyBytes, err
+	return ioutil.ReadAll(resp.Body)
 }
 
 // Bytes get []byte from response.Body
 func (resp *Response) String() (str string, err error) {
 	var bs []byte
-	if bs, err = resp.Bytes(); err != nil {
+	if bs, err = ioutil.ReadAll(resp.Body); err != nil {
 		return
 	}
 	return string(bs), err
@@ -52,9 +37,6 @@ func (resp *Response) String() (str string, err error) {
 
 // JSON parses the resp.Body data and stores the result
 func (resp *Response) JSON(i interface{}) error {
-	bodyBytes, err := resp.Bytes()
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(bodyBytes, i)
+	decoder := json.NewDecoder(resp.Body)
+	return decoder.Decode(i)
 }
