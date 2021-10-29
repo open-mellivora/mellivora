@@ -16,7 +16,7 @@
 
 ## TODO
 
+- Context 序列化, 支持远程任务
 - 优化 Spider 接口
 - 增加扩展功能
 - 添加更多常用中间件
-- core.Context 复用

@@ -47,7 +47,10 @@ func (e *Engine) Logger() log4go.Logger {
 	return e.logger
 }
 
-func (e *Engine) applyMiddleware(h HandlerFunc, middlewares ...Middleware) HandlerFunc {
+func (e *Engine) applyMiddleware(middlewares ...Middleware) HandlerFunc {
+	h := func(c *Context) error {
+		return nil
+	}
 	for i := len(middlewares) - 1; i >= 0; i-- {
 		m := middlewares[i]
 		handle := m.Next(h)
@@ -57,6 +60,20 @@ func (e *Engine) applyMiddleware(h HandlerFunc, middlewares ...Middleware) Handl
 		}
 	}
 	return h
+}
+
+func (e *Engine) runTask(task *Context, middlewareFunc HandlerFunc) {
+	if err := middlewareFunc(task); err != nil {
+		return
+	}
+
+	if task.Response == nil {
+		return
+	}
+
+	if err := task.handler(task); err != nil {
+		e.Logger().Error("Parse %s error", task.GetRequest().URL.String())
+	}
 }
 
 // Run run a spider.
@@ -77,6 +94,9 @@ func (e *Engine) Run(spider Spider) {
 	}
 
 	e.Logger().Info("Use spider middlewares: \n[%s]", strings.Join(logs, ",\n"))
+
+	middlewareFunc := e.applyMiddleware(append(e.middlewares, NewDownloader())...)
+
 	go func() {
 		for {
 			task := e.scheduler.Pop()
@@ -85,14 +105,13 @@ func (e *Engine) Run(spider Spider) {
 			}
 			e.c <- struct{}{}
 			go func(task *Context) {
-				err := task.handler(task)
-				// 考虑在这里增加扩展处理error
-				_ = err
+				e.runTask(task, middlewareFunc)
 				<-e.c
 				e.wg.Done()
 			}(task)
 		}
 	}()
+
 	spider.StartRequests(e)
 	c := make(chan struct{})
 	// wait shutdown
@@ -155,22 +174,7 @@ func (e *Engine) Get(url string, handler HandlerFunc, options ...RequestOptionsF
 
 // Request create a request
 func (e *Engine) Request(r *http.Request, handler HandlerFunc, options ...RequestOptionsFunc) {
-	middlewares := append(e.middlewares, NewDownloader())
-
-	middlewareHandler := e.applyMiddleware(func(c *Context) error {
-		return nil
-	}, middlewares...)
-
-	ctx := NewContext(e, r, func(c *Context) error {
-		if err := middlewareHandler(c); err != nil {
-			return err
-		}
-		// 过滤等正常情况导致Response无数据
-		if c.Response == nil {
-			return nil
-		}
-		return handler(c)
-	})
+	ctx := NewContext(e, r, handler)
 
 	opt := RequestOptions{}
 	for _, optFunc := range options {

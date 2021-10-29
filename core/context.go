@@ -1,7 +1,6 @@
 package core
 
 import (
-	"context"
 	"net/http"
 )
 
@@ -22,19 +21,19 @@ type (
 )
 
 type setter struct {
-	ctx context.Context
+	m map[interface{}]interface{}
 }
 
 func newSetter() setter {
-	return setter{ctx: context.TODO()}
+	return setter{m: make(map[interface{}]interface{})}
 }
 
 func (c *setter) Set(k, v interface{}) {
-	c.ctx = context.WithValue(c.ctx, k, v)
+	c.m[k] = v
 }
 
 func (c *setter) Value(k interface{}) interface{} {
-	return c.ctx.Value(k)
+	return c.m[k]
 }
 
 // NewContext returns a Context instance.

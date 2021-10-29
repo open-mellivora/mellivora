@@ -25,7 +25,6 @@ import (
 	"github.com/pkg/errors"
 	"icode.baidu.com/baidu/go-lib/log"
 	"icode.baidu.com/baidu/go-lib/log/log4go"
-
 	"icode.baidu.com/baidu/goodcoder/wangyufeng04/config"
 	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
 	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core/middlewares"

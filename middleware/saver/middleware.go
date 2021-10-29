@@ -10,6 +10,7 @@ import (
 	"regexp"
 
 	"github.com/valyala/bytebufferpool"
+
 	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
 )
 
@@ -85,13 +86,13 @@ func (m *Middleware) Next(handleFunc core.HandlerFunc) core.HandlerFunc {
 		defer f.Close()
 
 		buf := m.bytesPool.Get()
+		defer m.bytesPool.Put(buf)
 		newReader := io.TeeReader(c.Response.Body, buf)
 		c.Response.Body = ioutil.NopCloser(bytes.NewReader(buf.Bytes()))
+
 		if _, err = io.Copy(f, newReader); err != nil {
 			return
 		}
-
-		m.bytesPool.Put(buf)
 		return
 	}
 }
