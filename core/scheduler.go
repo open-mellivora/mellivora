@@ -8,10 +8,10 @@ import (
 
 type Scheduler interface {
 	// Push push a *Context
-	Push(c *Context)
+	Push(*ContextSerializable)
 	// Pop get a *Context
 	// return nil if empty
-	Pop() (c *Context)
+	Pop() *ContextSerializable
 	// Close close queue
 	Close()
 }
@@ -30,7 +30,7 @@ func NewLifoScheduler() *LifoScheduler {
 	}
 }
 
-func (l *LifoScheduler) Push(c *Context) {
+func (l *LifoScheduler) Push(c *ContextSerializable) {
 	if atomic.LoadInt64(l.closed) != 0 {
 		return
 	}
@@ -39,12 +39,12 @@ func (l *LifoScheduler) Push(c *Context) {
 	l.lock.Unlock()
 }
 
-func (l *LifoScheduler) Pop() (c *Context) {
+func (l *LifoScheduler) Pop() (c *ContextSerializable) {
 	l.lock.Lock()
 	defer l.lock.Unlock()
 	front := l.l.Front()
 	if front != nil {
-		c = l.l.Remove(front).(*Context)
+		c = l.l.Remove(front).(*ContextSerializable)
 	}
 	return
 }

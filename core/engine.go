@@ -14,20 +14,22 @@ import (
 
 // Engine is the top-level framework instance.
 type Engine struct {
-	wg          sync.WaitGroup
-	middlewares []Middleware
-	scheduler   Scheduler
-	logger      log4go.Logger
-	c           chan struct{}
+	wg                sync.WaitGroup
+	middlewares       []Middleware
+	scheduler         Scheduler
+	logger            log4go.Logger
+	c                 chan struct{}
+	contextSerializer *ContextSerializer
 }
 
 // NewEngine creates an instance of Engine.
 func NewEngine() *Engine {
 	core := &Engine{
-		wg:        sync.WaitGroup{},
-		scheduler: NewLifoScheduler(),
-		logger:    log4go.NewDefaultLogger(log4go.INFO),
-		c:         make(chan struct{}, 32),
+		wg:                sync.WaitGroup{},
+		scheduler:         NewLifoScheduler(),
+		logger:            log4go.NewDefaultLogger(log4go.INFO),
+		c:                 make(chan struct{}, 32),
+		contextSerializer: NewContextSerializer(),
 	}
 	return core
 }
@@ -99,11 +101,18 @@ func (e *Engine) Run(spider Spider) {
 
 	go func() {
 		for {
-			task := e.scheduler.Pop()
-			if task == nil {
+			taskText := e.scheduler.Pop()
+			if taskText == nil {
 				continue
 			}
+			var task *Context
+			var err error
+			if task, err = e.contextSerializer.Unmarshal(taskText); err != nil {
+				panic(err)
+			}
+			task.core = e
 			e.c <- struct{}{}
+
 			go func(task *Context) {
 				e.runTask(task, middlewareFunc)
 				<-e.c
@@ -186,5 +195,10 @@ func (e *Engine) Request(r *http.Request, handler HandlerFunc, options ...Reques
 	}
 
 	e.wg.Add(1)
-	e.scheduler.Push(ctx)
+	var bs *ContextSerializable
+	var err error
+	if bs, err = e.contextSerializer.Marshal(ctx); err != nil {
+		log.Println(err)
+	}
+	e.scheduler.Push(bs)
 }

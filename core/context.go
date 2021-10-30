@@ -1,7 +1,15 @@
 package core
 
 import (
+	"bufio"
+	"bytes"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
+	"reflect"
+	"sync"
+
+	"github.com/valyala/bytebufferpool"
 )
 
 const depthKey depth = iota
@@ -16,23 +24,23 @@ type (
 		core       *Engine
 		handler    HandlerFunc
 		httpClient *http.Client
-		setter
+		Setter
 	}
 )
 
-type setter struct {
+type Setter struct {
 	m map[interface{}]interface{}
 }
 
-func newSetter() setter {
-	return setter{m: make(map[interface{}]interface{})}
+func newSetter() Setter {
+	return Setter{m: make(map[interface{}]interface{})}
 }
 
-func (c *setter) Set(k, v interface{}) {
+func (c *Setter) Set(k, v interface{}) {
 	c.m[k] = v
 }
 
-func (c *setter) Value(k interface{}) interface{} {
+func (c *Setter) Value(k interface{}) interface{} {
 	return c.m[k]
 }
 
@@ -42,7 +50,7 @@ func NewContext(core *Engine, request *http.Request, handler HandlerFunc) *Conte
 		request: request,
 		core:    core,
 		handler: handler,
-		setter:  newSetter(),
+		Setter:  newSetter(),
 	}
 }
 
@@ -76,7 +84,7 @@ func (c *Context) SetDepth(depth int64) {
 	if c == nil {
 		return
 	}
-	c.setter.Set(depthKey, depth)
+	c.Setter.Set(depthKey, depth)
 }
 
 // GetDepth returns `depth`.
@@ -84,9 +92,60 @@ func (c *Context) GetDepth() int64 {
 	if c == nil {
 		return 0
 	}
-	value := c.setter.Value(depthKey)
+	value := c.Setter.Value(depthKey)
 	if value == nil {
 		return 0
 	}
 	return value.(int64)
+}
+
+type ContextSerializable struct {
+	HandlerName  string
+	RequestBytes []byte
+	URL          *url.URL
+	Setter       map[interface{}]interface{}
+}
+
+type ContextSerializer struct {
+	pool     *bytebufferpool.Pool
+	handlers sync.Map
+}
+
+func NewContextSerializer() *ContextSerializer {
+	return &ContextSerializer{
+		pool: new(bytebufferpool.Pool),
+	}
+}
+
+func (cs *ContextSerializer) Marshal(c *Context) (csz *ContextSerializable, err error) {
+	handlerName := reflect.TypeOf(c.handler).String()
+	cs.handlers.LoadOrStore(handlerName, c.handler)
+	csz = &ContextSerializable{
+		HandlerName: handlerName,
+		URL:         c.GetRequest().URL,
+		Setter:      c.Setter.m,
+	}
+
+	if csz.RequestBytes, err = httputil.DumpRequest(c.GetRequest(), true); err != nil {
+		return
+	}
+	return
+}
+
+func (cs *ContextSerializer) Unmarshal(csz *ContextSerializable) (c *Context, err error) {
+	c = new(Context)
+	var ok bool
+	var handler interface{}
+	if handler, ok = cs.handlers.Load(csz.HandlerName); !ok {
+		return
+	}
+	c.handler = handler.(HandlerFunc)
+	c.m = csz.Setter
+
+	if c.request, err = http.ReadRequest(bufio.NewReader(bytes.NewBuffer(csz.RequestBytes))); err != nil {
+		return
+	}
+	c.request.RequestURI = ""
+	c.request.URL = csz.URL
+	return
 }
