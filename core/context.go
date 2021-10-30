@@ -4,10 +4,14 @@ import (
 	"net/http"
 )
 
-const depthKey depth = iota
+const (
+	depthKey      depth      = iota
+	dontFilterKey dontFilter = iota
+)
 
 type (
-	depth int64
+	depth      int64
+	dontFilter int64
 	// Context represents the context of the current HTTP request. It holds request and
 	// response objects, path, path parameters, data and registered handler.
 	Context struct {
@@ -34,6 +38,40 @@ func (c *setter) Set(k, v interface{}) {
 
 func (c *setter) Value(k interface{}) interface{} {
 	return c.m[k]
+}
+
+// SetDontFilter sets `depth`.
+func (c *setter) SetDontFilter(dontFilter bool) {
+	c.Set(dontFilterKey, dontFilter)
+}
+
+// GetDontFilter returns `depth`.
+func (c *setter) GetDontFilter() bool {
+	if c == nil {
+		return false
+	}
+	value := c.Value(dontFilterKey)
+	if value == nil {
+		return false
+	}
+	return value.(bool)
+}
+
+// SetDepth sets `depth`.
+func (c *setter) SetDepth(depth int64) {
+	c.Set(depthKey, depth)
+}
+
+// GetDepth returns `depth`.
+func (c *setter) GetDepth() int64 {
+	if c == nil {
+		return 0
+	}
+	value := c.Value(depthKey)
+	if value == nil {
+		return 0
+	}
+	return value.(int64)
 }
 
 // NewContext returns a Context instance.
@@ -71,22 +109,46 @@ func (c *Context) SetRequest(req *http.Request) {
 	c.request = req
 }
 
-// SetDepth sets `depth`.
-func (c *Context) SetDepth(depth int64) {
-	if c == nil {
-		return
-	}
-	c.setter.Set(depthKey, depth)
+// Get create tasks from url
+func (c *Context) Get(url string, handler HandlerFunc,
+	options ...RequestOptionsFunc) (err error) {
+
+	return c.Gets([]string{url}, handler, options...)
 }
 
-// GetDepth returns `depth`.
-func (c *Context) GetDepth() int64 {
-	if c == nil {
-		return 0
+// Gets create tasks from urls
+func (c *Context) Gets(urls []string, handler HandlerFunc,
+	options ...RequestOptionsFunc) (err error) {
+
+	reqs := make([]*http.Request, len(urls))
+	for i := 0; i < len(urls); i++ {
+		if reqs[i], err = http.NewRequest(http.MethodGet, urls[i], nil); err != nil {
+			return
+		}
 	}
-	value := c.setter.Value(depthKey)
-	if value == nil {
-		return 0
+
+	return c.Requests(reqs, handler, options...)
+}
+
+// Request create task from req
+func (c *Context) Request(req *http.Request, handler HandlerFunc,
+	options ...RequestOptionsFunc) (err error) {
+
+	return c.Requests([]*http.Request{req}, handler, options...)
+}
+
+// Requests create tasks from reqs
+func (c *Context) Requests(reqs []*http.Request, handler HandlerFunc,
+	options ...RequestOptionsFunc) (err error) {
+
+	if c.request != nil {
+		options = append(options, withDepth(c.GetDepth()+1))
 	}
-	return value.(int64)
+
+	for i := 0; i < len(reqs); i++ {
+		req := reqs[i]
+		c.core.request(c, req, handler, options...)
+	}
+
+	return nil
 }

@@ -26,6 +26,7 @@ func (m *middleware) Next(handleFunc HandlerFunc) HandlerFunc {
 	return m.next(handleFunc)
 }
 
+//NewMiddleware create a middleware instance
 //nolint
 func NewMiddleware(next func(HandlerFunc) HandlerFunc) *middleware {
 	return &middleware{next: next}

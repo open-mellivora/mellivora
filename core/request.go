@@ -1,23 +1,31 @@
 package core
 
 type RequestOptions struct {
-	DontFilter *bool
-	PreContext *Context
+	setter
+}
+
+func NewRequestOptions() *RequestOptions {
+	return &RequestOptions{setter: newSetter()}
 }
 
 type RequestOptionsFunc func(options *RequestOptions)
 
-// WithPreContext 上一次的Context
-func WithPreContext(c *Context) RequestOptionsFunc {
+// withDepth 设置depth
+func withDepth(depth int64) RequestOptionsFunc {
 	return func(options *RequestOptions) {
-		options.PreContext = c
+		options.setter.SetDepth(depth)
 	}
 }
 
 // DontFilter 不过滤
 func DontFilter() RequestOptionsFunc {
 	return func(options *RequestOptions) {
-		dontFilter := true
-		options.DontFilter = &dontFilter
+		options.setter.SetDontFilter(true)
+	}
+}
+
+func WithValue(k, v interface{}) RequestOptionsFunc {
+	return func(options *RequestOptions) {
+		options.setter.Set(k, v)
 	}
 }

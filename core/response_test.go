@@ -34,9 +34,9 @@ Content-Type: multipart/byteranges; boundary=18a75608c8f47cef
 	c := NewContext(nil, req, nil)
 	c.SetResponse(NewResponse(resp))
 
-	str, err := c.String()
+	bs, err := c.Bytes()
 	assert.Equal(t, err, nil)
-	assert.Equal(t, []byte(str), []byte("{\"a\":\"1\"}"))
+	assert.Equal(t, bs, []byte("{\"a\":\"1\"}"))
 }
 
 func TestResponse_JSON(t *testing.T) {

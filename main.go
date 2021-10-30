@@ -75,6 +75,7 @@ func main() {
 	}
 
 	defer logger.Close()
+
 	f, err = os.Open(cfg.URLListFile)
 	if err != nil {
 		panic(errors.Wrap(err, "打开种子文件失败"))

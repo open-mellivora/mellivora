@@ -11,11 +11,17 @@ import (
 )
 
 func TestEngine_Run(t *testing.T) {
+	var result []string
 	c := core.NewEngine()
 	ctl := gomock.NewController(t)
 	ms := core_test.NewMockSpider(ctl)
-	ms.EXPECT().StartRequests(gomock.Any())
-	var result []string
+	ms.EXPECT().StartRequests(gomock.Any()).Return(core.NewContext(c, nil, nil).Get(
+		"https://baidu.com",
+		func(c *core.Context) error {
+			result = append(result, "4")
+			return nil
+		}))
+
 	c.Use(
 		core.NewMiddleware(func(handleFunc core.HandlerFunc) core.HandlerFunc {
 			return func(c *core.Context) error {
@@ -34,10 +40,6 @@ func TestEngine_Run(t *testing.T) {
 		}),
 	)
 
-	_ = c.Get("https://baidu.com", func(c *core.Context) error {
-		result = append(result, "4")
-		return nil
-	}, core.DontFilter())
 	c.Run(ms)
 	assert.Equal(t, result, []string{"1", "3", "2", "4"})
 }

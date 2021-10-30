@@ -112,7 +112,8 @@ func (e *Engine) Run(spider Spider) {
 		}
 	}()
 
-	spider.StartRequests(e)
+	ctx := NewContext(e, nil, nil)
+	spider.StartRequests(ctx)
 	c := make(chan struct{})
 	// wait shutdown
 	go func() {
@@ -162,29 +163,16 @@ func getTypeName(i interface{}) string {
 	return reflect.TypeOf(i).String()
 }
 
-// Get create a GET request
-func (e *Engine) Get(url string, handler HandlerFunc, options ...RequestOptionsFunc) (err error) {
-	var req *http.Request
-	if req, err = http.NewRequest(http.MethodGet, url, nil); err != nil {
-		return
-	}
-	e.Request(req, handler, options...)
-	return
-}
-
-// Request create a request
-func (e *Engine) Request(r *http.Request, handler HandlerFunc, options ...RequestOptionsFunc) {
+// request create a request
+func (e *Engine) request(preCtx *Context, r *http.Request, handler HandlerFunc, options ...RequestOptionsFunc) {
 	ctx := NewContext(e, r, handler)
 
-	opt := RequestOptions{}
+	opt := NewRequestOptions()
 	for _, optFunc := range options {
-		optFunc(&opt)
+		optFunc(opt)
 	}
-
-	if opt.PreContext != nil {
-		ctx.SetDepth(opt.PreContext.GetDepth() + 1)
-	}
-
+	ctx.setter = opt.setter
+	ctx.SetHTTPClient(preCtx.httpClient)
 	e.wg.Add(1)
 	e.scheduler.Push(ctx)
 }
