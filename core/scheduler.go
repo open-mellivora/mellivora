@@ -1,9 +1,9 @@
 package core
 
 import (
-	"container/list"
-	"sync"
 	"sync/atomic"
+
+	"github.com/smallnest/queue"
 )
 
 type Scheduler interface {
@@ -18,35 +18,32 @@ type Scheduler interface {
 
 type LifoScheduler struct {
 	closed *int64
-	l      *list.List
-	lock   sync.Mutex
+	q      queue.Queue
 }
 
 func NewLifoScheduler() *LifoScheduler {
 	return &LifoScheduler{
 		closed: new(int64),
-		l:      list.New(),
-		lock:   sync.Mutex{},
+		q:      queue.NewSliceQueue(0),
 	}
 }
 
 func (l *LifoScheduler) Push(c *Context) {
-	if atomic.LoadInt64(l.closed) != 0 {
-		return
+	if atomic.LoadInt64(l.closed) != 1 {
+		l.q.Enqueue(c)
 	}
-	l.lock.Lock()
-	l.l.PushBack(c)
-	l.lock.Unlock()
 }
 
 func (l *LifoScheduler) Pop() (c *Context) {
-	l.lock.Lock()
-	defer l.lock.Unlock()
-	front := l.l.Front()
-	if front != nil {
-		c = l.l.Remove(front).(*Context)
+	if atomic.LoadInt64(l.closed) == 1 {
+		return
 	}
-	return
+
+	item := l.q.Dequeue()
+	if item == nil {
+		return
+	}
+	return item.(*Context)
 }
 
 func (l *LifoScheduler) Close() {

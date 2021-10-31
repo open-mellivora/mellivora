@@ -19,19 +19,24 @@ func BenchmarkLifoScheduler(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		c := scheduler.Pop()
 		if c != cs[i] {
-			b.Errorf("c != ctxs[%d]", i)
+			b.Errorf("c != ctxs[%d],c:%v,cs[%d]:%v", i, c, i, cs[i])
 		}
 	}
-	b.Run("空队列获取", func(b *testing.B) {
+	b.StopTimer()
+}
+
+func TestLifoScheduler(t *testing.T) {
+	scheduler := NewLifoScheduler()
+	t.Run("空队列获取", func(t *testing.T) {
 		if scheduler.Pop() != nil {
-			b.Errorf("空队列有数据")
+			t.Errorf("空队列有数据")
 		}
 	})
-
-	b.Run("关闭后不能获取", func(b *testing.B) {
+	scheduler.Push(new(Context))
+	t.Run("关闭后不能获取", func(t *testing.T) {
 		scheduler.Close()
 		if scheduler.Pop() != nil {
-			b.Errorf("scheduler已关闭")
+			t.Errorf("scheduler已关闭")
 		}
 	})
 }
