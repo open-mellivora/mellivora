@@ -11,7 +11,7 @@ import (
 
 func TestRecover(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "https://baidu.com", nil)
-	c := core.NewContext(core.NewEngine(), req, nil)
+	c := core.NewContext(core.NewEngine(32), req, nil)
 	filter := NewRecover()
 	t.Run("panic", func(t *testing.T) {
 		err := filter.Next(func(c *core.Context) error {

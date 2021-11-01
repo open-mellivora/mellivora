@@ -11,7 +11,7 @@ import (
 
 func TestMiddleware_Next(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "https://baidu.com", nil)
-	c := core.NewContext(core.NewEngine(), req, nil)
+	c := core.NewContext(core.NewEngine(32), req, nil)
 	filter := NewDupeFilter()
 	t.Run("未过滤", func(t *testing.T) {
 		var flag bool

@@ -12,7 +12,7 @@ import (
 
 func TestEngine_Run(t *testing.T) {
 	var result []string
-	c := core.NewEngine()
+	c := core.NewEngine(32)
 	ctl := gomock.NewController(t)
 	ms := core_test.NewMockSpider(ctl)
 	ms.EXPECT().StartRequests(gomock.Any()).Return(core.NewContext(c, nil, nil).Get(

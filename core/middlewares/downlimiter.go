@@ -12,15 +12,12 @@ import (
 // DownLimiter for limit downloader
 type DownLimiter struct {
 	config                      DownLimiterConfig
-	concurrencyLimiter          *limter.ConcurrencyLimiter
 	concurrencyPerDomainLimiter *limter.ConcurrencyGroupLimiter
 	downloadDelayPerDomain      *limter.DelayGroupLimiter
 }
 
 // DownLimiterConfig  defines the config for DownLimiter middleware.
 type DownLimiterConfig struct {
-	// ConcurrentRequests 并行限制
-	ConcurrentRequests int64
 	// ConcurrentRequestsPerDomain 每个域名下请求并行限制
 	ConcurrentRequestsPerDomain int64
 	// DownloadDelayPerDomain 每个域名下请求的延时
@@ -32,7 +29,6 @@ type DownLimiterConfig struct {
 
 // DefaultDownLimiterConfig is the default DownLimiter middleware config.
 var DefaultDownLimiterConfig = DownLimiterConfig{
-	ConcurrentRequests:          10,
 	ConcurrentRequestsPerDomain: 5,
 	DownloadDelayPerDomain:      time.Second,
 	Timeout:                     1,
@@ -44,12 +40,9 @@ func NewDownLimiterWithConfig(config DownLimiterConfig) *DownLimiter {
 	if config.ConcurrentRequestsPerDomain == 0 {
 		config.ConcurrentRequestsPerDomain = 1
 	}
-	if config.ConcurrentRequests == 0 {
-		config.ConcurrentRequests = 1
-	}
+
 	m := &DownLimiter{
-		config:             config,
-		concurrencyLimiter: limter.NewConcurrencyLimiter(config.ConcurrentRequests),
+		config: config,
 		concurrencyPerDomainLimiter: limter.NewConcurrencyGroupLimiter(
 			config.ConcurrentRequestsPerDomain),
 		downloadDelayPerDomain: limter.NewDelayGroupLimiter(config.DownloadDelayPerDomain),
@@ -71,10 +64,8 @@ func (m *DownLimiter) Next(handleFunc core.HandlerFunc) core.HandlerFunc {
 		req := c.GetRequest()
 		domain := req.URL.Host
 		m.concurrencyPerDomainLimiter.Wait(domain)
-		m.concurrencyLimiter.Wait()
 		m.downloadDelayPerDomain.Wait(domain)
 		defer func() {
-			m.concurrencyLimiter.Done()
 			m.concurrencyPerDomainLimiter.Done(domain)
 			m.downloadDelayPerDomain.Reset(domain)
 		}()

@@ -10,24 +10,28 @@ import (
 	"sync"
 
 	"icode.baidu.com/baidu/go-lib/log/log4go"
+	"icode.baidu.com/baidu/goodcoder/wangyufeng04/library/limter"
 )
 
 // Engine is the top-level framework instance.
 type Engine struct {
-	wg          sync.WaitGroup
-	middlewares []Middleware
-	scheduler   Scheduler
-	logger      log4go.Logger
-	c           chan struct{}
+	wg                 sync.WaitGroup
+	middlewares        []Middleware
+	scheduler          Scheduler
+	logger             log4go.Logger
+	concurrencyLimiter *limter.ConcurrencyLimiter
 }
 
 // NewEngine creates an instance of Engine.
-func NewEngine() *Engine {
+func NewEngine(concurrency int64) *Engine {
+	if concurrency <= 0 {
+		concurrency = 1
+	}
 	core := &Engine{
-		wg:        sync.WaitGroup{},
-		scheduler: NewLifoScheduler(),
-		logger:    log4go.NewDefaultLogger(log4go.INFO),
-		c:         make(chan struct{}, 32),
+		wg:                 sync.WaitGroup{},
+		scheduler:          NewLifoScheduler(),
+		logger:             log4go.NewDefaultLogger(log4go.INFO),
+		concurrencyLimiter: limter.NewConcurrencyLimiter(concurrency),
 	}
 	return core
 }
@@ -103,10 +107,10 @@ func (e *Engine) Run(spider Spider) {
 			if task == nil {
 				continue
 			}
-			e.c <- struct{}{}
+			e.concurrencyLimiter.Wait()
 			go func(task *Context) {
 				e.runTask(task, middlewareFunc)
-				<-e.c
+				e.concurrencyLimiter.Done()
 				e.wg.Done()
 			}(task)
 		}
