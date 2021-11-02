@@ -75,6 +75,7 @@ func main() {
 	}
 
 	defer logger.Close()
+
 	f, err = os.Open(cfg.URLListFile)
 	if err != nil {
 		panic(errors.Wrap(err, "打开种子文件失败"))
@@ -87,7 +88,6 @@ func main() {
 	}
 
 	limiterMiddleware := middlewares.NewDownLimiterWithConfig(middlewares.DownLimiterConfig{
-		ConcurrentRequests:          cfg.ThreadCount,
 		ConcurrentRequestsPerDomain: cfg.ThreadCount,
 		DownloadDelayPerDomain:      time.Duration(cfg.CrawlInterval * float64(time.Second)),
 		Timeout:                     time.Duration(cfg.CrawlTimeout * float64(time.Second)),
@@ -101,7 +101,7 @@ func main() {
 		panic(errors.Wrap(err, "初始化存储程序失败"))
 	}
 
-	engine := core.NewEngine()
+	engine := core.NewEngine(cfg.ThreadCount)
 	engine.SetLogger(logger)
 	engine.Use(
 		middlewares.NewDupeFilter(),     // 去重

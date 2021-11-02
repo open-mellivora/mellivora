@@ -18,12 +18,13 @@ type SimpleSpider struct {
 	urls []string
 }
 
-func (s *SimpleSpider) StartRequests(c *core.Engine) {
+func (s *SimpleSpider) StartRequests(c *core.Context) error {
 	for i := 0; i < len(s.urls); i++ {
 		if err := c.Get(s.urls[i], s.Parse); err != nil {
 			continue
 		}
 	}
+	return nil
 }
 
 func NewURL(base *url.URL, href string) (*url.URL, error) {
@@ -88,10 +89,5 @@ func (s *SimpleSpider) Parse(c *core.Context) (err error) {
 		return
 	}
 
-	for i := 0; i < len(urls); i++ {
-		if err = c.Engine().Get(urls[i], s.Parse, core.WithPreContext(c)); err != nil {
-			c.Engine().Logger().Warn("get error,url:%s", urls[i])
-		}
-	}
-	return
+	return c.Gets(urls, s.Parse)
 }

@@ -35,13 +35,15 @@ func (m *MockSpider) EXPECT() *MockSpiderMockRecorder {
 }
 
 // StartRequests mocks base method.
-func (m *MockSpider) StartRequests(e *core.Engine) {
+func (m *MockSpider) StartRequests(c *core.Context) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "StartRequests", e)
+	ret := m.ctrl.Call(m, "StartRequests", c)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // StartRequests indicates an expected call of StartRequests.
-func (mr *MockSpiderMockRecorder) StartRequests(e interface{}) *gomock.Call {
+func (mr *MockSpiderMockRecorder) StartRequests(c interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartRequests", reflect.TypeOf((*MockSpider)(nil).StartRequests), e)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartRequests", reflect.TypeOf((*MockSpider)(nil).StartRequests), c)
 }

@@ -1,52 +1,49 @@
 package core
 
 import (
-	"container/list"
-	"sync"
 	"sync/atomic"
+
+	"github.com/smallnest/queue"
 )
 
 type Scheduler interface {
 	// Push push a *Context
-	Push(*ContextSerializable)
+	Push([]byte)
 	// Pop get a *Context
 	// return nil if empty
-	Pop() *ContextSerializable
+	Pop() []byte
 	// Close close queue
 	Close()
 }
 
 type LifoScheduler struct {
 	closed *int64
-	l      *list.List
-	lock   sync.Mutex
+	q      queue.Queue
 }
 
 func NewLifoScheduler() *LifoScheduler {
 	return &LifoScheduler{
 		closed: new(int64),
-		l:      list.New(),
-		lock:   sync.Mutex{},
+		q:      queue.NewSliceQueue(0),
 	}
 }
 
-func (l *LifoScheduler) Push(c *ContextSerializable) {
-	if atomic.LoadInt64(l.closed) != 0 {
+func (l *LifoScheduler) Push(c []byte) {
+	if atomic.LoadInt64(l.closed) != 1 {
+		l.q.Enqueue(c)
+	}
+}
+
+func (l *LifoScheduler) Pop() (c []byte) {
+	if atomic.LoadInt64(l.closed) == 1 {
 		return
 	}
-	l.lock.Lock()
-	l.l.PushBack(c)
-	l.lock.Unlock()
-}
 
-func (l *LifoScheduler) Pop() (c *ContextSerializable) {
-	l.lock.Lock()
-	defer l.lock.Unlock()
-	front := l.l.Front()
-	if front != nil {
-		c = l.l.Remove(front).(*ContextSerializable)
+	item := l.q.Dequeue()
+	if item == nil {
+		return
 	}
-	return
+	return item.([]byte)
 }
 
 func (l *LifoScheduler) Close() {

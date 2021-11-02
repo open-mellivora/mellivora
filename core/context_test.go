@@ -8,7 +8,7 @@ import (
 )
 
 func TestContext_Set(t *testing.T) {
-	e := NewEngine()
+	e := NewEngine(32)
 	req := new(http.Request)
 	handler := func(c *Context) error {
 		return nil

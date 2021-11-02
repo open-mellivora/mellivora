@@ -12,7 +12,7 @@ import (
 
 func TestLogging(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "https://baidu.com", nil)
-	e := core.NewEngine()
+	e := core.NewEngine(32)
 	c := core.NewContext(e, req, nil)
 	filter := NewLogging()
 	t.Run("记录信息", func(t *testing.T) {

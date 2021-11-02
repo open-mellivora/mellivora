@@ -10,26 +10,30 @@ import (
 	"sync"
 
 	"icode.baidu.com/baidu/go-lib/log/log4go"
+	"icode.baidu.com/baidu/goodcoder/wangyufeng04/library/limter"
 )
 
 // Engine is the top-level framework instance.
 type Engine struct {
-	wg                sync.WaitGroup
-	middlewares       []Middleware
-	scheduler         Scheduler
-	logger            log4go.Logger
-	c                 chan struct{}
-	contextSerializer *ContextSerializer
+	contextSerializer  *ContextSerializer
+	wg                 sync.WaitGroup
+	middlewares        []Middleware
+	scheduler          Scheduler
+	logger             log4go.Logger
+	concurrencyLimiter *limter.ConcurrencyLimiter
 }
 
 // NewEngine creates an instance of Engine.
-func NewEngine() *Engine {
+func NewEngine(concurrency int64) *Engine {
+	if concurrency <= 0 {
+		concurrency = 1
+	}
 	core := &Engine{
-		wg:                sync.WaitGroup{},
-		scheduler:         NewLifoScheduler(),
-		logger:            log4go.NewDefaultLogger(log4go.INFO),
-		c:                 make(chan struct{}, 32),
-		contextSerializer: NewContextSerializer(),
+		wg:                 sync.WaitGroup{},
+		scheduler:          NewLifoScheduler(),
+		logger:             log4go.NewDefaultLogger(log4go.INFO),
+		contextSerializer:  NewContextSerializer(),
+		concurrencyLimiter: limter.NewConcurrencyLimiter(concurrency),
 	}
 	return core
 }
@@ -111,17 +115,18 @@ func (e *Engine) Run(spider Spider) {
 				panic(err)
 			}
 			task.core = e
-			e.c <- struct{}{}
 
+			e.concurrencyLimiter.Wait()
 			go func(task *Context) {
 				e.runTask(task, middlewareFunc)
-				<-e.c
+				e.concurrencyLimiter.Done()
 				e.wg.Done()
 			}(task)
 		}
 	}()
 
-	spider.StartRequests(e)
+	ctx := NewContext(e, nil, nil)
+	spider.StartRequests(ctx)
 	c := make(chan struct{})
 	// wait shutdown
 	go func() {
@@ -171,34 +176,22 @@ func getTypeName(i interface{}) string {
 	return reflect.TypeOf(i).String()
 }
 
-// Get create a GET request
-func (e *Engine) Get(url string, handler HandlerFunc, options ...RequestOptionsFunc) (err error) {
-	var req *http.Request
-	if req, err = http.NewRequest(http.MethodGet, url, nil); err != nil {
-		return
-	}
-	e.Request(req, handler, options...)
-	return
-}
-
-// Request create a request
-func (e *Engine) Request(r *http.Request, handler HandlerFunc, options ...RequestOptionsFunc) {
+// request create a request
+func (e *Engine) request(preCtx *Context, r *http.Request, handler HandlerFunc, options ...RequestOptionsFunc) (err error) {
 	ctx := NewContext(e, r, handler)
 
-	opt := RequestOptions{}
+	opt := NewRequestOptions()
 	for _, optFunc := range options {
-		optFunc(&opt)
+		optFunc(opt)
 	}
-
-	if opt.PreContext != nil {
-		ctx.SetDepth(opt.PreContext.GetDepth() + 1)
-	}
-
+	ctx.setter = opt.setter
+	ctx.SetHTTPClient(preCtx.httpClient)
 	e.wg.Add(1)
-	var bs *ContextSerializable
-	var err error
+	var bs []byte
 	if bs, err = e.contextSerializer.Marshal(ctx); err != nil {
-		log.Println(err)
+		panic(err)
+		return
 	}
 	e.scheduler.Push(bs)
+	return
 }
