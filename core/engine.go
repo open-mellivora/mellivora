@@ -112,7 +112,8 @@ func (e *Engine) Run(spider Spider) {
 			var task *Context
 			var err error
 			if task, err = e.contextSerializer.Unmarshal(taskText); err != nil {
-				panic(err)
+				e.Logger().Error("unmarshal task error,err:%s", err.Error())
+				continue
 			}
 			task.core = e
 
