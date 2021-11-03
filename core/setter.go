@@ -27,11 +27,13 @@ func (c *setter) Set(k string, v interface{}) {
 }
 
 func (c *setter) Value(k string, v interface{}) error {
-	if bs, has := c.read[k]; !has {
+	var bs []byte
+	var has bool
+	if bs, has = c.read[k]; !has {
 		return nil
-	} else {
-		return json.Unmarshal(bs, v)
 	}
+
+	return json.Unmarshal(bs, v)
 }
 
 func (c *setter) MustValue(k string, v interface{}) {
@@ -47,9 +49,6 @@ func (c *setter) SetDontFilter(dontFilter bool) {
 
 // GetDontFilter returns `depth`.
 func (c *setter) GetDontFilter() bool {
-	if c == nil {
-		return false
-	}
 	var value bool
 	c.MustValue(dontFilterKey, &value)
 	return value
@@ -62,9 +61,6 @@ func (c *setter) SetDepth(depth int64) {
 
 // GetDepth returns `depth`.
 func (c *setter) GetDepth() int64 {
-	if c == nil {
-		return 0
-	}
 	var value int64
 	c.MustValue(depthKey, &value)
 	return value

@@ -32,6 +32,7 @@ func TestRequestOptions_WithValue(t *testing.T) {
 	for _, optFunc := range opts {
 		optFunc(opt)
 	}
-
-	assert.Equal(t, opt.Value("a"), "b")
+	var v1 string
+	opt.MustValue("a", &v1)
+	assert.Equal(t, v1, "b")
 }

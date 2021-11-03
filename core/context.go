@@ -157,7 +157,8 @@ func (cs *ContextSerializer) Unmarshal(bs []byte) (c *Context, err error) {
 	}
 	c.handler = handler.(HandlerFunc)
 
-	if c.request, err = http.ReadRequest(bufio.NewReader(bytes.NewBuffer(csz.RequestBytes))); err != nil {
+	if c.request, err = http.ReadRequest(
+		bufio.NewReader(bytes.NewBuffer(csz.RequestBytes))); err != nil {
 		return
 	}
 	c.request.RequestURI = ""

@@ -127,7 +127,10 @@ func (e *Engine) Run(spider Spider) {
 	}()
 
 	ctx := NewContext(e, nil, nil)
-	spider.StartRequests(ctx)
+	if err := spider.StartRequests(ctx); err != nil {
+		e.Logger().Error("start requests error err:%s", err.Error())
+	}
+
 	c := make(chan struct{})
 	// wait shutdown
 	go func() {
@@ -178,7 +181,9 @@ func getTypeName(i interface{}) string {
 }
 
 // request create a request
-func (e *Engine) request(preCtx *Context, r *http.Request, handler HandlerFunc, options ...RequestOptionsFunc) (err error) {
+func (e *Engine) request(preCtx *Context, r *http.Request, handler HandlerFunc,
+	options ...RequestOptionsFunc) (err error) {
+
 	ctx := NewContext(e, r, handler)
 
 	opt := NewRequestOptions()
@@ -190,7 +195,6 @@ func (e *Engine) request(preCtx *Context, r *http.Request, handler HandlerFunc, 
 	e.wg.Add(1)
 	var bs []byte
 	if bs, err = e.contextSerializer.Marshal(ctx); err != nil {
-		panic(err)
 		return
 	}
 	e.scheduler.Push(bs)

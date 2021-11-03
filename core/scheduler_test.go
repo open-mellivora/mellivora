@@ -1,14 +1,16 @@
 package core
 
 import (
+	"bytes"
+	"reflect"
 	"testing"
 )
 
 func BenchmarkLifoScheduler(b *testing.B) {
 	scheduler := NewLifoScheduler()
-	cs := make([]*Context, b.N)
+	cs := make([][]byte, b.N)
 	for i := 0; i < b.N; i++ {
-		cs[i] = NewContext(nil, nil, nil)
+		cs[i] = bytes.NewBuffer(nil).Bytes()
 	}
 
 	b.ResetTimer()
@@ -18,7 +20,7 @@ func BenchmarkLifoScheduler(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		c := scheduler.Pop()
-		if c != cs[i] {
+		if !reflect.DeepEqual(c, cs[i]) {
 			b.Errorf("c != ctxs[%d],c:%v,cs[%d]:%v", i, c, i, cs[i])
 		}
 	}
