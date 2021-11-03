@@ -9,22 +9,15 @@ import (
 
 const configFile = "spider.conf"
 
-// SpiderConfig 爬虫配置
+// SpiderConfig spider config
 type SpiderConfig struct {
-	// URLListFile 种子文件路径
-	URLListFile string `gcfg:"urlListFile" validate:"required"`
-	// OutputDirectory 抓取结果存储目录
-	OutputDirectory string `gcfg:"outputDirectory" validate:"required"`
-	// MaxDepth 最大抓取深度(种子为0级)
-	MaxDepth int64 `gcfg:"maxDepth" validate:"gte=0,lte=128"`
-	// CrawlInterval 抓取间隔. 单位: 秒
-	CrawlInterval float64 `gcfg:"crawlInterval" validate:"gte=0"`
-	// CrawlTimeout 抓取超时. 单位: 秒
-	CrawlTimeout float64 `gcfg:"crawlTimeout" validate:"gte=0"`
-	// TargetURL 需要存储的目标网页URL pattern(正则表达式)
-	TargetURL string `gcfg:"targetUrl"`
-	// ThreadCount 抓取routine数
-	ThreadCount int64 `gcfg:"threadCount" validate:"gte=0"`
+	URLListFile     string  `gcfg:"urlListFile" validate:"required"`
+	OutputDirectory string  `gcfg:"outputDirectory" validate:"required"`
+	MaxDepth        int64   `gcfg:"maxDepth" validate:"gte=0,lte=128"`
+	CrawlInterval   float64 `gcfg:"crawlInterval" validate:"gte=0"`
+	CrawlTimeout    float64 `gcfg:"crawlTimeout" validate:"gte=0"`
+	TargetURL       string  `gcfg:"targetUrl"`
+	ThreadCount     int64   `gcfg:"threadCount" validate:"gte=0"`
 }
 
 type Config struct {

@@ -104,13 +104,13 @@ func main() {
 	engine := core.NewEngine(cfg.ThreadCount)
 	engine.SetLogger(logger)
 	engine.Use(
-		middlewares.NewDupeFilter(),     // 去重
-		limiterMiddleware,               // 请求限制
-		middlewares.NewStatsCollector(), // 状态收集
-		middlewares.NewRecover(),        // panic捕获
-		middlewares.NewLogging(),        // 日志打印
-		saverMiddleware,                 // 网页存储
-		middlewares.NewDecoder(),        // 统一转为utf-8编码
+		middlewares.NewDupeFilter(),
+		limiterMiddleware,
+		middlewares.NewStatsCollector(),
+		middlewares.NewRecover(),
+		middlewares.NewLogging(),
+		saverMiddleware,
+		middlewares.NewDecoder(),
 	)
 
 	s := spider.NewSimpleSpider(urls)

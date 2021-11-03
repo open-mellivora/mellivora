@@ -67,6 +67,11 @@ func (e *Engine) applyMiddleware(middlewares ...Middleware) HandlerFunc {
 }
 
 func (e *Engine) runTask(task *Context, middlewareFunc HandlerFunc) {
+	defer func() {
+		if r := recover(); r != nil {
+			e.Logger().Error("Recovery: %+v", r)
+		}
+	}()
 	if err := middlewareFunc(task); err != nil {
 		return
 	}
