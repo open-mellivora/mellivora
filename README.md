@@ -47,11 +47,11 @@
 
 7. 网页存储时每个网页单独存为一个文件，以 URL 为文件名。注意对 URL 中的特殊字符，需要做转义
 
-- 通过添加 [saver 中间件](cmiddlewares/saver/middleware.go) 实现对符合要求的网页进行保存,文件名用 `url.QueryEscape`转 url 得到
+- 通过添加 [saver 中间件](middleware/saver/middleware.go) 实现对符合要求的网页进行保存,文件名用 `url.QueryEscape`转 url 得到
 
 8. 要求支持多 routine 并行抓取（注意：这里并不是指简单设置 GOMAXPROCS>1)
 
-- [core/engine.go](core/engine.go) 并行通过 channel 实现，在开始任务之前写入 channel,在任务结束后从 channel 读出
+- 并行通过 channel 实现，在开始任务之前写入 channel,在任务结束后从 channel 读出,代码见[core/engine.go/Run](core/engine.go)
 
 9. 代码严格遵守百度 Golang 编码规范 V1.1（http://wiki.baidu.com/pages/viewpage.action?pageId=104882818）
 
