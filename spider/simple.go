@@ -11,13 +11,19 @@ import (
 func NewSimpleSpider(urls []string) *SimpleSpider {
 	return &SimpleSpider{
 		urls: urls,
+		matchs: map[string]string{
+			"a":      "href",
+			"iframe": "src",
+		},
 	}
 }
 
 type SimpleSpider struct {
-	urls []string
+	urls   []string
+	matchs map[string]string // map[tag]attr
 }
 
+// StartRequests implement core.Spider.StartRequests
 func (s *SimpleSpider) StartRequests(c *core.Context) error {
 	for i := 0; i < len(s.urls); i++ {
 		if err := c.Get(s.urls[i], s.Parse); err != nil {
@@ -27,7 +33,8 @@ func (s *SimpleSpider) StartRequests(c *core.Context) error {
 	return nil
 }
 
-func NewURL(base *url.URL, href string) (*url.URL, error) {
+// URLJoin Construct a full absolute URL by combining a base URL with another URL
+func URLJoin(base *url.URL, href string) (*url.URL, error) {
 	hrefURL, err := url.Parse(href)
 	if err != nil {
 		return nil, err
@@ -35,7 +42,8 @@ func NewURL(base *url.URL, href string) (*url.URL, error) {
 	return base.ResolveReference(hrefURL), nil
 }
 
-func ExtractURL(c *core.Context) (urls []string, err error) {
+// ExtractURL Extract links from iframe and a
+func (s *SimpleSpider) ExtractURL(c *core.Context) (urls []string, err error) {
 	tokenizer := c.Tokenizer()
 
 	for {
@@ -48,14 +56,16 @@ func ExtractURL(c *core.Context) (urls []string, err error) {
 		}
 
 		tn, _ := tokenizer.TagName()
-		if len(tn) != 1 || tn[0] != 'a' {
+		attr, has := s.matchs[string(tn)]
+		if !has {
 			continue
 		}
+
 		more := true
 		var key, value []byte
 		for more {
 			key, value, more = tokenizer.TagAttr()
-			if string(key) != "href" {
+			if string(key) != attr {
 				continue
 			}
 
@@ -64,12 +74,12 @@ func ExtractURL(c *core.Context) (urls []string, err error) {
 				break
 			}
 
-			newURL, err := NewURL(c.GetRequest().URL, v)
+			newURL, err := URLJoin(c.GetRequest().URL, v)
 			if err != nil {
 				break
 			}
 
-			// 限制在当前域名
+			// Only allow the current domain
 			if newURL.Host != c.GetRequest().URL.Host {
 				break
 			}
@@ -85,7 +95,7 @@ func ExtractURL(c *core.Context) (urls []string, err error) {
 
 func (s *SimpleSpider) Parse(c *core.Context) (err error) {
 	var urls []string
-	if urls, err = ExtractURL(c); err != nil {
+	if urls, err = s.ExtractURL(c); err != nil {
 		return
 	}
 
