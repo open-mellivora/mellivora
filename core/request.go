@@ -10,20 +10,22 @@ func NewRequestOptions() *RequestOptions {
 
 type RequestOptionsFunc func(options *RequestOptions)
 
-// withDepth 设置depth
+// withDepth returns a RequestOptionsFunc which sets the depth
 func withDepth(depth int64) RequestOptionsFunc {
 	return func(options *RequestOptions) {
 		options.setter.SetDepth(depth)
 	}
 }
 
-// DontFilter 不过滤
+// DontFilter returns a RequestOptionsFunc which sets the dontFilter
 func DontFilter() RequestOptionsFunc {
 	return func(options *RequestOptions) {
 		options.setter.SetDontFilter(true)
 	}
 }
 
+// WithValue returns a RequestOptionsFunc which sets k,v in setter
+// The provided value must be serializable
 func WithValue(k string, v interface{}) RequestOptionsFunc {
 	return func(options *RequestOptions) {
 		options.setter.Set(k, v)
