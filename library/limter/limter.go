@@ -9,35 +9,38 @@ type ConcurrencyLimiter struct {
 	c chan struct{}
 }
 
-func NewConcurrencyLimiter(size int64) *ConcurrencyLimiter {
-	return &ConcurrencyLimiter{c: make(chan struct{}, size)}
+// NewConcurrencyLimiter returns a ConcurrencyLimiter instance
+// up to the given maximum capacity
+func NewConcurrencyLimiter(capacity int64) *ConcurrencyLimiter {
+	return &ConcurrencyLimiter{c: make(chan struct{}, capacity)}
 }
 
-// Wait 阻塞等待
+// Wait blocking request tokens until they are available.
 func (l *ConcurrencyLimiter) Wait() {
 	l.c <- struct{}{}
 }
 
-// Done 完成
+// Done release a token
 func (l *ConcurrencyLimiter) Done() {
 	<-l.c
 }
 
 type ConcurrencyGroupLimiter struct {
-	mapping sync.Map
-	size    int64
+	mapping  sync.Map
+	capacity int64
 }
 
-func NewConcurrencyGroupLimiter(size int64) *ConcurrencyGroupLimiter {
+// NewConcurrencyGroupLimiter returns a ConcurrencyGroupLimiter instance
+func NewConcurrencyGroupLimiter(capacity int64) *ConcurrencyGroupLimiter {
 	return &ConcurrencyGroupLimiter{
-		mapping: sync.Map{},
-		size:    size,
+		mapping:  sync.Map{},
+		capacity: capacity,
 	}
 }
 
-// Wait 阻塞等待
+// Wait blocking request tokens until they are available.
 func (l *ConcurrencyGroupLimiter) Wait(key string) {
-	limiter := NewConcurrencyLimiter(l.size)
+	limiter := NewConcurrencyLimiter(l.capacity)
 	v, ok := l.mapping.LoadOrStore(key, limiter)
 	if ok {
 		v.(*ConcurrencyLimiter).Wait()
@@ -46,7 +49,7 @@ func (l *ConcurrencyGroupLimiter) Wait(key string) {
 	}
 }
 
-// Done 完成
+// Done release a token
 func (l *ConcurrencyGroupLimiter) Done(key string) {
 	if v, ok := l.mapping.Load(key); ok {
 		v.(*ConcurrencyLimiter).Done()
@@ -64,7 +67,7 @@ func NewDelayGroupLimiter(delay time.Duration) *DelayGroupLimiter {
 	return &DelayGroupLimiter{delay: delay}
 }
 
-// Wait 阻塞等待
+// Wait blocking request tokens until they are available.
 func (l *DelayGroupLimiter) Wait(key string) {
 	if l.delay <= 0 {
 		return
@@ -76,7 +79,7 @@ func (l *DelayGroupLimiter) Wait(key string) {
 	}
 }
 
-// Reset 重置定时器
+// Reset changes the timer to expire after duration delay.
 func (l *DelayGroupLimiter) Reset(key string) {
 	if v, ok := l.mapping.Load(key); ok {
 		v.(*time.Timer).Reset(l.delay)
