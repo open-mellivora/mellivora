@@ -6,8 +6,8 @@ import (
 	"github.com/go-playground/assert/v2"
 	"github.com/golang/mock/gomock"
 
-	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
-	core_test "icode.baidu.com/baidu/goodcoder/wangyufeng04/record/core"
+	"github.com/open-mellivora/mellivora/core"
+	core_test "github.com/open-mellivora/mellivora/record/core"
 )
 
 func TestEngine_Run(t *testing.T) {

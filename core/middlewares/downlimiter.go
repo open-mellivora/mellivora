@@ -5,8 +5,8 @@ import (
 
 	"golang.org/x/net/context"
 
-	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
-	"icode.baidu.com/baidu/goodcoder/wangyufeng04/library/limter"
+	"github.com/open-mellivora/mellivora/core"
+	"github.com/open-mellivora/mellivora/library/limter"
 )
 
 // DownLimiter for limit downloader

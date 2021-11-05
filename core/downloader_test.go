@@ -10,7 +10,7 @@ import (
 	"github.com/go-playground/assert/v2"
 	"github.com/golang/mock/gomock"
 
-	"icode.baidu.com/baidu/goodcoder/wangyufeng04/record/roundtripper"
+	"github.com/open-mellivora/mellivora/record/roundtripper"
 )
 
 func TestDownloader_Next(t *testing.T) {

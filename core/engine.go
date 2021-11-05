@@ -9,8 +9,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/open-mellivora/mellivora/library/limter"
 	"icode.baidu.com/baidu/go-lib/log/log4go"
-	"icode.baidu.com/baidu/goodcoder/wangyufeng04/library/limter"
 )
 
 // Engine is the top-level framework instance.

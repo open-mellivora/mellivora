@@ -8,7 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	core "icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
+	core "github.com/open-mellivora/mellivora/core"
 )
 
 // MockSpider is a mock of Spider interface.

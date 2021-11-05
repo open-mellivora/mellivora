@@ -3,7 +3,7 @@ package middlewares
 import (
 	"sync"
 
-	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
+	"github.com/open-mellivora/mellivora/core"
 )
 
 // DupeFilter filter same url

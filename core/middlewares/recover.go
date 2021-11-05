@@ -5,7 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
+	"github.com/open-mellivora/mellivora/core"
 )
 
 // Recover defines a middleware which recovers from panics anywhere in the chain

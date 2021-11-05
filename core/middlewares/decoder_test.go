@@ -11,7 +11,7 @@ import (
 	"github.com/go-playground/assert/v2"
 	"golang.org/x/text/encoding/simplifiedchinese"
 
-	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
+	"github.com/open-mellivora/mellivora/core"
 )
 
 func TestDecoder(t *testing.T) {

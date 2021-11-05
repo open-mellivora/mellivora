@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
+	"github.com/open-mellivora/mellivora/core"
 )
 
 // Logging log access

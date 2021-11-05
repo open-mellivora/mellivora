@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
-	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
-	"icode.baidu.com/baidu/goodcoder/wangyufeng04/library/collector"
+	"github.com/open-mellivora/mellivora/core"
+	"github.com/open-mellivora/mellivora/library/collector"
 )
 
 // StatsCollector for collecting scraping stats

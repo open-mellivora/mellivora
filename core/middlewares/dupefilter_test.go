@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-playground/assert/v2"
 
-	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
+	"github.com/open-mellivora/mellivora/core"
 )
 
 func TestMiddleware_Next(t *testing.T) {

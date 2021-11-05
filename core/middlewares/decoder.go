@@ -6,7 +6,7 @@ import (
 
 	"golang.org/x/net/html/charset"
 
-	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
+	"github.com/open-mellivora/mellivora/core"
 )
 
 // Decoder for decode response body to utf8

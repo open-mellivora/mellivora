@@ -8,7 +8,7 @@ import (
 	"github.com/go-playground/assert/v2"
 	"github.com/pkg/errors"
 
-	"icode.baidu.com/baidu/goodcoder/wangyufeng04/core"
+	"github.com/open-mellivora/mellivora/core"
 )
 
 func TestStatsCollector(t *testing.T) {
