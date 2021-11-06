@@ -46,7 +46,7 @@ func (m *Recover) Next(handleFunc core.HandlerFunc) core.HandlerFunc {
 		defer func() {
 			if r := recover(); r != nil || panicked {
 				err = m.RecoverConfig.RecoveryHandlerFunc(r)
-				c.Engine().Logger().Error("Recovery error: %+v", err)
+				c.Engine().Logger().Println("Recovery error: %+v", err)
 			}
 		}()
 
