@@ -2,7 +2,7 @@ package core
 
 import (
 	"bytes"
-	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"testing"
@@ -17,7 +17,7 @@ func TestDownloader_Next(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "https://baidu.com", nil)
 	resp := &http.Response{
 		StatusCode: http.StatusOK,
-		Body:       io.NopCloser(bytes.NewBufferString("hello")),
+		Body:       ioutil.NopCloser(bytes.NewBufferString("hello")),
 	}
 	c := NewContext(nil, req, nil)
 	downloader := NewDownloader()

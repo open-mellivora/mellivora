@@ -2,7 +2,7 @@ package middlewares
 
 import (
 	"bytes"
-	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"strings"
@@ -32,7 +32,7 @@ func TestDecoder(t *testing.T) {
 </html>
 `))
 		resp := &http.Response{
-			StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(bs)),
+			StatusCode: http.StatusOK, Body: ioutil.NopCloser(bytes.NewBuffer(bs)),
 			Header: map[string][]string{
 				"Content-Type": {"Content-type:text/html;charset=gbk"},
 			},
@@ -49,7 +49,7 @@ func TestDecoder(t *testing.T) {
 	t.Run("编码UTF8成功", func(t *testing.T) {
 		resp := &http.Response{
 			StatusCode: http.StatusOK,
-			Body: io.NopCloser(bytes.NewBuffer([]byte(`<html>
+			Body: ioutil.NopCloser(bytes.NewBuffer([]byte(`<html>
 <!DOCTYPE html>
 <html>
 <head>
