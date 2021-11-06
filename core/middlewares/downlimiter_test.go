@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/go-playground/assert/v2"
-
 	"github.com/open-mellivora/mellivora/core"
 )
 

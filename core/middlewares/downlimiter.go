@@ -6,7 +6,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/open-mellivora/mellivora/core"
-	"github.com/open-mellivora/mellivora/library/limter"
+	"github.com/open-mellivora/mellivora/core/library/limter"
 )
 
 // DownLimiter for limit downloader

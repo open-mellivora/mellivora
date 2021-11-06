@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/open-mellivora/mellivora/core"
-	"github.com/open-mellivora/mellivora/library/collector"
+	"github.com/open-mellivora/mellivora/core/library/collector"
 )
 
 // StatsCollector for collecting scraping stats
@@ -65,7 +65,7 @@ func (s *StatsCollector) Close(c *core.Engine) {
 	for _, item := range sorties {
 		msgs = append(msgs, fmt.Sprintf("'%v': %v", item.key, item.value))
 	}
-	c.Logger().Info(strings.Join(msgs, "\n"))
+	c.Logger().Printf(strings.Join(msgs, "\n"))
 }
 
 type kv struct {

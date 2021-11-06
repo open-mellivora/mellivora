@@ -9,8 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/open-mellivora/mellivora/library/limter"
-	"icode.baidu.com/baidu/go-lib/log/log4go"
+	"github.com/open-mellivora/mellivora/core/library/limter"
 )
 
 // Engine is the top-level framework instance.
@@ -19,7 +18,7 @@ type Engine struct {
 	wg                 sync.WaitGroup
 	middlewares        []Middleware
 	scheduler          Scheduler
-	logger             log4go.Logger
+	logger             *log.Logger
 	concurrencyLimiter *limter.ConcurrencyLimiter
 }
 
@@ -31,7 +30,7 @@ func NewEngine(concurrency int64) *Engine {
 	core := &Engine{
 		wg:                 sync.WaitGroup{},
 		scheduler:          NewLifoScheduler(),
-		logger:             log4go.NewDefaultLogger(log4go.INFO),
+		logger:             log.New(os.Stdout, "[mellivora]", log.LstdFlags|log.Lshortfile),
 		contextSerializer:  NewContextSerializer(),
 		concurrencyLimiter: limter.NewConcurrencyLimiter(concurrency),
 	}
@@ -43,13 +42,13 @@ func (e *Engine) Use(middlewares ...Middleware) {
 	e.middlewares = append(e.middlewares, middlewares...)
 }
 
-// SetLogger sets `log4go.Logger`.
-func (e *Engine) SetLogger(l log4go.Logger) {
+// SetLogger sets `*log.Logger`.
+func (e *Engine) SetLogger(l *log.Logger) {
 	e.logger = l
 }
 
-// Logger returns `log4go.Logger`.
-func (e *Engine) Logger() log4go.Logger {
+// Logger returns `*log.Logger`.
+func (e *Engine) Logger() *log.Logger {
 	return e.logger
 }
 
@@ -71,7 +70,7 @@ func (e *Engine) applyMiddleware(middlewares ...Middleware) HandlerFunc {
 func (e *Engine) runTask(task *Context, middlewareFunc HandlerFunc) {
 	defer func() {
 		if r := recover(); r != nil {
-			e.Logger().Error("Recovery: %+v", r)
+			e.Logger().Printf("Recovery: %+v", r)
 		}
 	}()
 	if err := middlewareFunc(task); err != nil {
@@ -83,7 +82,7 @@ func (e *Engine) runTask(task *Context, middlewareFunc HandlerFunc) {
 	}
 
 	if err := task.handler(task); err != nil {
-		e.Logger().Error("Parse %s error", task.GetRequest().URL.String())
+		e.Logger().Printf("Parse %s error", task.GetRequest().URL.String())
 	}
 }
 
@@ -95,7 +94,7 @@ func (e *Engine) Run(spider Spider) {
 		if !ok {
 			continue
 		}
-		e.Logger().Info("Middleware %s Start", getTypeName(m))
+		e.Logger().Printf("Middleware %s Start", getTypeName(m))
 		starter.Start(e)
 	}
 
@@ -104,7 +103,7 @@ func (e *Engine) Run(spider Spider) {
 		logs[i] = getTypeName(m)
 	}
 
-	e.Logger().Info("Use spider middlewares: \n[%s]", strings.Join(logs, ",\n"))
+	e.Logger().Printf("Use spider middlewares: \n[%s]", strings.Join(logs, ",\n"))
 
 	middlewareFunc := e.applyMiddleware(append(e.middlewares, NewDownloader())...)
 
@@ -117,7 +116,7 @@ func (e *Engine) Run(spider Spider) {
 			var task *Context
 			var err error
 			if task, err = e.contextSerializer.Unmarshal(taskText); err != nil {
-				e.Logger().Error("unmarshal task error,err:%s", err.Error())
+				e.Logger().Printf("unmarshal task error,err:%s", err.Error())
 				continue
 			}
 			task.core = e
@@ -133,7 +132,7 @@ func (e *Engine) Run(spider Spider) {
 
 	ctx := NewContext(e, nil, nil)
 	if err := spider.StartRequests(ctx); err != nil {
-		e.Logger().Error("start requests error err:%s", err.Error())
+		e.Logger().Printf("start requests error err:%s", err.Error())
 	}
 
 	c := make(chan struct{})
@@ -154,7 +153,7 @@ func (e *Engine) Run(spider Spider) {
 // Close immediately stops the server.
 func (e *Engine) Close() {
 	e.scheduler.Close()
-	e.Logger().Info("Scheduler Closed")
+	e.Logger().Printf("Scheduler Closed")
 	for i := len(e.middlewares) - 1; i >= 0; i-- {
 		m := e.middlewares[i]
 		closer, ok := m.(Closer)
@@ -162,9 +161,9 @@ func (e *Engine) Close() {
 			continue
 		}
 		closer.Close(e)
-		e.Logger().Info("Middleware %s Closed", getTypeName(m))
+		e.Logger().Printf("Middleware %s Closed", getTypeName(m))
 	}
-	e.Logger().Info("Engine Closed")
+	e.Logger().Printf("Engine Closed")
 }
 
 // Shutdown stops the server gracefully.
