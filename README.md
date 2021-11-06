@@ -2,8 +2,8 @@
 
 [![Build Status][1]][2] [![codecov.io][3]][4] [![Go Report][5]][6]
 
-[1]: https://github.com/open-mellivora/mellivora/workflows/test/badge.svg "Build Status badge"
-[2]: https://github.com/open-mellivora/mellivora/workflows/test/badge.svg "Action Build Status"
+[1]: https://github.com/open-mellivora/mellivora/workflows/Test/badge.svg "Build Status badge"
+[2]: https://github.com/open-mellivora/mellivora/workflows/Test/badge.svg "Action Build Status"
 [3]: https://codecov.io/github/open-mellivora/mellivora/coverage.svg?branch=master "Coverage badge"
 [4]: https://codecov.io/github/open-mellivora/mellivora?branch=master "Codecov Status"
 [5]: https://goreportcard.com/badge/github.com/open-mellivora/mellivora "Go Report badge"
