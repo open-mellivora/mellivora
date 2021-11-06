@@ -2,6 +2,8 @@ package core
 
 import (
 	"encoding/json"
+	"errors"
+	"reflect"
 )
 
 type setter struct {
@@ -27,6 +29,24 @@ func (c *setter) Set(k string, v interface{}) {
 }
 
 func (c *setter) Value(k string, v interface{}) error {
+	if c.write != nil {
+		wv, ok := c.write[k]
+		if !ok {
+			return nil
+		}
+
+		valueOf := reflect.ValueOf(v)
+		if valueOf.Kind() != reflect.Ptr || valueOf.IsNil() {
+			return errors.New("value not ptr")
+		}
+
+		if !valueOf.Elem().CanSet() {
+			return errors.New("value cant set")
+		}
+
+		valueOf.Elem().Set(reflect.ValueOf(wv))
+		return nil
+	}
 	var bs []byte
 	var has bool
 	if bs, has = c.read[k]; !has {

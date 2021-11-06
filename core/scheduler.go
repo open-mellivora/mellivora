@@ -43,6 +43,7 @@ func (l *LifoScheduler) Pop() (c []byte) {
 	if item == nil {
 		return
 	}
+
 	return item.([]byte)
 }
 

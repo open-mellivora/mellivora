@@ -7,7 +7,7 @@ issues:
   new: true
   exclude-rules:
     - linters:
-      - staticcheck
+        - staticcheck
       text: "SA1019:"
 
 linters:
@@ -43,3 +43,18 @@ linters:
 linters-settings:
   goimports:
     local-prefixes: github.com/open-mellivora/mellivora
+  govet:
+    check-shadowing: true
+  whitespace:
+    multi-func: true
+    multi-if: true
+  lll:
+    line-length: 100
+  gomnd:
+    settings:
+      mnd:
+        checks: case,condition,return
+  goconst:
+    ignore-tests: true
+  gocyclo:
+    min-complexity: 30
