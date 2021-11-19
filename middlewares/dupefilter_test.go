@@ -1,0 +1,34 @@
+package middlewares
+
+import (
+	"net/http"
+	"testing"
+
+	"github.com/open-mellivora/mellivora"
+
+	"github.com/go-playground/assert/v2"
+)
+
+func TestMiddleware_Next(t *testing.T) {
+	req, _ := http.NewRequest(http.MethodGet, "https://baidu.com", nil)
+	c := mellivora.NewContext(mellivora.NewEngine(32), req, nil)
+	filter := NewDupeFilter()
+	t.Run("未过滤", func(t *testing.T) {
+		var flag bool
+		err := filter.Next(func(c *mellivora.Context) error {
+			flag = true
+			return nil
+		})(c)
+		assert.Equal(t, err, nil)
+		assert.Equal(t, flag, true)
+	})
+	t.Run("过滤", func(t *testing.T) {
+		var flag bool
+		err := filter.Next(func(c *mellivora.Context) error {
+			flag = true
+			return nil
+		})(c)
+		assert.Equal(t, err, nil)
+		assert.Equal(t, flag, false)
+	})
+}
