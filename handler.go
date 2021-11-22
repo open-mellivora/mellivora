@@ -1,8 +1,10 @@
 package mellivora
 
-// MiddlewareHandlerFunc defines a function to serve *Context.
-type MiddlewareHandlerFunc func(c *Context) error
-type HandleFunc func(c *Context)Task
+// MiddlewareFunc defines a function to serve *Context.
+type (
+	MiddlewareFunc func(c *Context) error
+	HandleFunc     func(c *Context) Task
+)
 
 // Closable is the interface for objects that can release its resources.
 type Closable interface {

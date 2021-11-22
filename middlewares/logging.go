@@ -25,7 +25,7 @@ func NewLoggingWithConfig(config LoggingConfig) *Logging {
 }
 
 // Next implement mellivora.Next
-func (m *Logging) Next(handleFunc mellivora.MiddlewareHandlerFunc) mellivora.MiddlewareHandlerFunc {
+func (m *Logging) Next(handleFunc mellivora.MiddlewareFunc) mellivora.MiddlewareFunc {
 	return func(c *mellivora.Context) (err error) {
 		err = handleFunc(c)
 		if err != nil {

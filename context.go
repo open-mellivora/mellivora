@@ -14,10 +14,10 @@ type (
 	// response objects, path, path parameters, data and registered handler.
 	Context struct {
 		*Response
-		request    *http.Request
-		core       *Engine
-		handler    HandleFunc
-		httpClient *http.Client
+		request      *http.Request
+		core         *Engine
+		handler      HandleFunc
+		roundTripper http.RoundTripper
 		setter
 	}
 )
@@ -32,9 +32,9 @@ func NewContext(core *Engine, request *http.Request, handler HandleFunc) *Contex
 	}
 }
 
-// SetHTTPClient sets `*http.Client`.
-func (c *Context) SetHTTPClient(client *http.Client) {
-	c.httpClient = client
+// SetRoundTripper sets `http.RoundTripper`.
+func (c *Context) SetRoundTripper(rt http.RoundTripper) {
+	c.roundTripper = rt
 }
 
 // SetResponse sets `*Response`.

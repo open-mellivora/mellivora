@@ -1,8 +1,9 @@
 package middlewares
 
 import (
-	"github.com/open-mellivora/mellivora"
 	"time"
+
+	"github.com/open-mellivora/mellivora"
 
 	"golang.org/x/net/context"
 
@@ -56,7 +57,7 @@ func NewDownLimiter() *DownLimiter {
 }
 
 // Next implement mellivora.Middleware.Next
-func (m *DownLimiter) Next(handleFunc mellivora.MiddlewareHandlerFunc) mellivora.MiddlewareHandlerFunc {
+func (m *DownLimiter) Next(handleFunc mellivora.MiddlewareFunc) mellivora.MiddlewareFunc {
 	return func(c *mellivora.Context) (err error) {
 		if c.GetDepth() > m.config.MaxDepth {
 			return nil

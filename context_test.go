@@ -10,7 +10,7 @@ import (
 func TestContext_Set(t *testing.T) {
 	e := NewEngine(32)
 	req := new(http.Request)
-	handler := func(c *Context) error {
+	handler := func(c *Context) Task {
 		return nil
 	}
 
@@ -25,8 +25,4 @@ func TestContext_Set(t *testing.T) {
 	resp := NewResponse(nil)
 	c.SetResponse(resp)
 	assert.Equal(t, resp, c.Response)
-
-	client := &http.Client{}
-	c.SetHTTPClient(client)
-	assert.Equal(t, c.httpClient, client)
 }

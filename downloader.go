@@ -6,14 +6,21 @@ import (
 
 type Downloader struct{}
 
-func (d *Downloader) Next(handler MiddlewareHandlerFunc) MiddlewareHandlerFunc {
+func (d *Downloader) Next(handler MiddlewareFunc) MiddlewareFunc {
 	return func(c *Context) (err error) {
 		if c.Response != nil {
 			return nil
 		}
 
 		var response *http.Response
-		if response, err = d.download(c.httpClient, c.GetRequest()); err != nil {
+		if c.roundTripper == nil {
+			c.roundTripper = http.DefaultTransport
+		}
+
+		if response, err = d.download(&http.Client{
+			Transport: c.roundTripper,
+		},
+			c.GetRequest()); err != nil {
 			return
 		}
 

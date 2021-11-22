@@ -2,9 +2,10 @@ package middlewares
 
 import (
 	"fmt"
-	"github.com/open-mellivora/mellivora"
 	"sort"
 	"strings"
+
+	"github.com/open-mellivora/mellivora"
 
 	collector2 "github.com/open-mellivora/mellivora/library/collector"
 )
@@ -34,7 +35,7 @@ func NewStatsCollector() *StatsCollector {
 }
 
 // Next implement mellivora.StatsCollector.Next
-func (s *StatsCollector) Next(handleFunc mellivora.MiddlewareHandlerFunc)  mellivora.MiddlewareHandlerFunc {
+func (s *StatsCollector) Next(handleFunc mellivora.MiddlewareFunc) mellivora.MiddlewareFunc {
 	return func(c *mellivora.Context) error {
 		domain := fmt.Sprint(c.GetRequest().URL.Host)
 		s.groupCollector.Add("request_count", 1)

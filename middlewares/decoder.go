@@ -32,7 +32,7 @@ func NewDecoderWithConfig(config DecoderConfig) *Decoder {
 }
 
 // Next implement mellivora.Middleware.Next
-func (p *Decoder) Next(handleFunc mellivora.MiddlewareHandlerFunc) mellivora.MiddlewareHandlerFunc {
+func (p *Decoder) Next(handleFunc mellivora.MiddlewareFunc) mellivora.MiddlewareFunc {
 	return func(c *mellivora.Context) (err error) {
 		if err = handleFunc(c); err != nil {
 			return

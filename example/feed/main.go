@@ -1,16 +1,17 @@
 package main
 
 import (
+	"net/url"
+
 	"github.com/open-mellivora/mellivora"
 	"github.com/open-mellivora/mellivora/middlewares"
 	"golang.org/x/net/html"
-	"net/url"
 )
 
 func NewSimpleSpider(urls []string) *SimpleSpider {
 	return &SimpleSpider{
 		urls: urls,
-		matchs: map[string]string{
+		matches: map[string]string{
 			"a":      "href",
 			"iframe": "src",
 		},
@@ -18,13 +19,13 @@ func NewSimpleSpider(urls []string) *SimpleSpider {
 }
 
 type SimpleSpider struct {
-	urls   []string
-	matchs map[string]string // map[tag]attr
+	urls    []string
+	matches map[string]string // map[tag]attr
 }
 
 // StartRequests implement core.Spider.StartRequests
 func (s *SimpleSpider) StartRequests() mellivora.Task {
-	task,_:= mellivora.Gets(s.urls,s.Parse)
+	task, _ := mellivora.Gets(s.urls, s.Parse)
 	return task
 }
 
@@ -40,7 +41,6 @@ func URLJoin(base *url.URL, href string) (*url.URL, error) {
 // ExtractURL Extract links from iframe and a
 func (s *SimpleSpider) ExtractURL(c *mellivora.Context) (urls []string, err error) {
 	tokenizer := c.Tokenizer()
-
 	for {
 		tt := tokenizer.Next()
 		if tt == html.ErrorToken {
@@ -51,7 +51,7 @@ func (s *SimpleSpider) ExtractURL(c *mellivora.Context) (urls []string, err erro
 		}
 
 		tn, _ := tokenizer.TagName()
-		attr, has := s.matchs[string(tn)]
+		attr, has := s.matches[string(tn)]
 		if !has {
 			continue
 		}
@@ -75,9 +75,9 @@ func (s *SimpleSpider) ExtractURL(c *mellivora.Context) (urls []string, err erro
 			}
 
 			// Only allow the current domain
-			if newURL.Host != c.GetRequest().URL.Host {
-				break
-			}
+			// if newURL.Host != c.GetRequest().URL.Host {
+			// 	break
+			// }
 
 			urls = append(urls, newURL.String())
 			if !more {
@@ -95,13 +95,13 @@ func (s *SimpleSpider) Parse(c *mellivora.Context) (task mellivora.Task) {
 		return
 	}
 
-	task,err= mellivora.Gets(urls,s.Parse)
+	task, _ = mellivora.Gets(urls, s.Parse)
 	return task
 }
 
-func main(){
-	spider:=NewSimpleSpider([]string{"https://www.sina.com.cn/"})
-	e:=mellivora.NewEngine(1)
-	e.Use(middlewares.NewLogging())
+func main() {
+	spider := NewSimpleSpider([]string{"https://www.sina.com.cn/"})
+	e := mellivora.NewEngine(10)
+	e.Use(middlewares.NewRetry(), middlewares.NewLogging())
 	e.Run(spider)
 }

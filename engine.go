@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	 "github.com/open-mellivora/mellivora/library/limter"
+	"github.com/open-mellivora/mellivora/library/limter"
 	"go.uber.org/zap"
 )
 
@@ -21,6 +21,7 @@ type Engine struct {
 	scheduler          Scheduler
 	logger             *zap.Logger
 	concurrencyLimiter *limter.ConcurrencyLimiter
+	filter             Filter
 }
 
 // NewEngine creates an instance of Engine.
@@ -28,12 +29,14 @@ func NewEngine(concurrency int64) *Engine {
 	if concurrency <= 0 {
 		concurrency = 1
 	}
+	logger, _ := zap.NewProduction()
 	core := &Engine{
 		wg:                 sync.WaitGroup{},
 		scheduler:          NewLifoScheduler(),
-		logger:             zap.NewExample(),
 		contextSerializer:  NewContextSerializer(),
 		concurrencyLimiter: limter.NewConcurrencyLimiter(concurrency),
+		filter:             NewBloomFilter(),
+		logger:             logger,
 	}
 	return core
 }
@@ -53,7 +56,7 @@ func (e *Engine) Logger() *zap.Logger {
 	return e.logger
 }
 
-func (e *Engine) applyMiddleware(middlewares ...Middleware) MiddlewareHandlerFunc {
+func (e *Engine) applyMiddleware(middlewares ...Middleware) MiddlewareFunc {
 	h := func(c *Context) error {
 		return nil
 	}
@@ -68,12 +71,13 @@ func (e *Engine) applyMiddleware(middlewares ...Middleware) MiddlewareHandlerFun
 	return h
 }
 
-func (e *Engine) runc(c *Context, middlewareFunc MiddlewareHandlerFunc) {
+func (e *Engine) runC(c *Context, middlewareFunc MiddlewareFunc) {
 	defer func() {
 		if r := recover(); r != nil {
 			e.Logger().Sugar().Errorf("Recovery: %+v", r)
 		}
 	}()
+
 	if err := middlewareFunc(c); err != nil {
 		return
 	}
@@ -85,8 +89,8 @@ func (e *Engine) runc(c *Context, middlewareFunc MiddlewareHandlerFunc) {
 	if task = c.handler(c); task == nil {
 		e.Logger().Sugar().Warnf("Empty %s Task", c.GetRequest().URL.String())
 	}
-	for i:=0;i<len(task.Requests());i++{
-		e.request(c,task.Requests()[i],task.Handler(),task.RequestOptions()...)
+	for i := 0; i < len(task.Requests()); i++ {
+		e.request(c, task.Requests()[i], task.Handler(), task.RequestOptions()...)
 	}
 }
 
@@ -127,7 +131,8 @@ func (e *Engine) Run(spider Spider) {
 
 			e.concurrencyLimiter.Wait()
 			go func(c *Context) {
-				e.runc(c, middlewareFunc)
+				e.filter.Add(c)
+				e.runC(c, middlewareFunc)
 				e.concurrencyLimiter.Done()
 				e.wg.Done()
 			}(c)
@@ -203,8 +208,13 @@ func (e *Engine) request(preCtx *Context, r *http.Request, handler HandleFunc,
 	}
 	ctx.setter = opt.setter
 	if preCtx != nil {
-		ctx.SetHTTPClient(preCtx.httpClient)
+		ctx.SetDepth(preCtx.GetDepth() + 1)
 	}
+
+	if e.filter.Exist(ctx) {
+		return
+	}
+
 	e.wg.Add(1)
 	var bs []byte
 	if bs, err = e.contextSerializer.Marshal(ctx); err != nil {

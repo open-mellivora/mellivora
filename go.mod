@@ -3,6 +3,8 @@ module github.com/open-mellivora/mellivora
 go 1.13
 
 require (
+	github.com/bits-and-blooms/bitset v1.2.1 // indirect
+	github.com/bits-and-blooms/bloom/v3 v3.1.0
 	github.com/go-playground/assert/v2 v2.0.1
 	github.com/golang/mock v1.6.0
 	github.com/kr/text v0.2.0 // indirect
