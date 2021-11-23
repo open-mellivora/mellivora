@@ -8,10 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/open-mellivora/mellivora"
-
 	"github.com/go-playground/assert/v2"
 	"golang.org/x/text/encoding/simplifiedchinese"
+
+	"github.com/open-mellivora/mellivora"
 )
 
 func TestDecoder(t *testing.T) {

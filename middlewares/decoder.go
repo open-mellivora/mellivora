@@ -53,7 +53,3 @@ func (p *Decoder) Next(handleFunc mellivora.MiddlewareFunc) mellivora.Middleware
 		return
 	}
 }
-
-func init() {
-	mellivora.RegisterMiddleware("a", &Decoder{})
-}

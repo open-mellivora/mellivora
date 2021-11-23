@@ -11,7 +11,7 @@ type ConcurrencyLimiter struct {
 
 // NewConcurrencyLimiter returns a ConcurrencyLimiter instance
 // up to the given maximum capacity
-func NewConcurrencyLimiter(capacity int64) *ConcurrencyLimiter {
+func NewConcurrencyLimiter(capacity uint64) *ConcurrencyLimiter {
 	return &ConcurrencyLimiter{c: make(chan struct{}, capacity)}
 }
 
@@ -27,11 +27,11 @@ func (l *ConcurrencyLimiter) Done() {
 
 type ConcurrencyGroupLimiter struct {
 	mapping  sync.Map
-	capacity int64
+	capacity uint64
 }
 
 // NewConcurrencyGroupLimiter returns a ConcurrencyGroupLimiter instance
-func NewConcurrencyGroupLimiter(capacity int64) *ConcurrencyGroupLimiter {
+func NewConcurrencyGroupLimiter(capacity uint64) *ConcurrencyGroupLimiter {
 	return &ConcurrencyGroupLimiter{
 		mapping:  sync.Map{},
 		capacity: capacity,

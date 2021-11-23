@@ -94,7 +94,6 @@ func (s *SimpleSpider) Parse(c *mellivora.Context) (task mellivora.Task) {
 	if urls, err = s.ExtractURL(c); err != nil {
 		return
 	}
-
 	task, _ = mellivora.Gets(urls, s.Parse)
 	return task
 }
@@ -102,6 +101,10 @@ func (s *SimpleSpider) Parse(c *mellivora.Context) (task mellivora.Task) {
 func main() {
 	spider := NewSimpleSpider([]string{"https://www.sina.com.cn/"})
 	e := mellivora.NewEngine(10)
-	e.Use(middlewares.NewRetry(), middlewares.NewLogging())
+	e.Use(
+		middlewares.NewStatsCollector(),
+		middlewares.NewRetry(),
+		middlewares.NewDownLimiter(),
+		middlewares.NewLogging())
 	e.Run(spider)
 }

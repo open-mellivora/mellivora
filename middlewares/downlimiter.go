@@ -3,10 +3,9 @@ package middlewares
 import (
 	"time"
 
-	"github.com/open-mellivora/mellivora"
-
 	"golang.org/x/net/context"
 
+	"github.com/open-mellivora/mellivora"
 	"github.com/open-mellivora/mellivora/library/limter"
 )
 
@@ -20,33 +19,33 @@ type DownLimiter struct {
 // DownLimiterConfig  defines the config for DownLimiter middleware.
 type DownLimiterConfig struct {
 	// ConcurrentRequestsPerDomain 每个域名下请求并行限制
-	ConcurrentRequestsPerDomain int64
+	ConcurrentRequestsPerDomain uint64
 	// DownloadDelayPerDomain 每个域名下请求的延时
 	DownloadDelayPerDomain time.Duration
 	// Timeout 请求超时
-	Timeout  time.Duration
-	MaxDepth int64
+	Timeout time.Duration
 }
 
 // DefaultDownLimiterConfig is the default DownLimiter middleware config.
 var DefaultDownLimiterConfig = DownLimiterConfig{
-	ConcurrentRequestsPerDomain: 5,
-	DownloadDelayPerDomain:      time.Second,
-	Timeout:                     1,
+	ConcurrentRequestsPerDomain: 1024,
+	DownloadDelayPerDomain:      0,
+	Timeout:                     3 * time.Second,
 }
 
 // NewDownLimiterWithConfig returns a DownLimiter middleware with config.
 // See: `DownLimiter()`.
 func NewDownLimiterWithConfig(config DownLimiterConfig) *DownLimiter {
 	if config.ConcurrentRequestsPerDomain == 0 {
-		config.ConcurrentRequestsPerDomain = 1
+		config.ConcurrentRequestsPerDomain =
+			DefaultDownLimiterConfig.ConcurrentRequestsPerDomain
 	}
-
 	m := &DownLimiter{
 		config: config,
 		concurrencyPerDomainLimiter: limter.NewConcurrencyGroupLimiter(
 			config.ConcurrentRequestsPerDomain),
-		downloadDelayPerDomain: limter.NewDelayGroupLimiter(config.DownloadDelayPerDomain),
+		downloadDelayPerDomain: limter.NewDelayGroupLimiter(
+			config.DownloadDelayPerDomain),
 	}
 	return m
 }
@@ -59,9 +58,6 @@ func NewDownLimiter() *DownLimiter {
 // Next implement mellivora.Middleware.Next
 func (m *DownLimiter) Next(handleFunc mellivora.MiddlewareFunc) mellivora.MiddlewareFunc {
 	return func(c *mellivora.Context) (err error) {
-		if c.GetDepth() > m.config.MaxDepth {
-			return nil
-		}
 		req := c.GetRequest()
 		domain := req.URL.Host
 		m.concurrencyPerDomainLimiter.Wait(domain)
@@ -72,7 +68,9 @@ func (m *DownLimiter) Next(handleFunc mellivora.MiddlewareFunc) mellivora.Middle
 		}()
 		if m.config.Timeout != 0 {
 			ctx := req.Context()
-			ctx, _ = context.WithTimeout(ctx, m.config.Timeout)
+			var cancel context.CancelFunc
+			ctx, cancel = context.WithTimeout(ctx, m.config.Timeout)
+			defer cancel()
 			c.SetRequest(req.WithContext(ctx))
 		}
 		err = handleFunc(c)

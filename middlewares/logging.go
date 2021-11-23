@@ -1,6 +1,9 @@
 package middlewares
 
-import "github.com/open-mellivora/mellivora"
+import (
+	"github.com/open-mellivora/mellivora"
+	"go.uber.org/zap"
+)
 
 // Logging log access
 type Logging struct {
@@ -28,14 +31,17 @@ func NewLoggingWithConfig(config LoggingConfig) *Logging {
 func (m *Logging) Next(handleFunc mellivora.MiddlewareFunc) mellivora.MiddlewareFunc {
 	return func(c *mellivora.Context) (err error) {
 		err = handleFunc(c)
+		logger := c.Engine().Logger().With(
+			zap.String("url", c.GetRequest().URL.String()),
+			zap.Int64("depth", c.GetDepth()))
+
 		if err != nil {
-			c.Engine().Logger().Sugar().Errorf("[depth]:%v [url]:%v [error]:%v",
-				c.GetDepth(), c.GetRequest().URL.String(), err)
+			logger.Warn("logging error", zap.Error(err))
 			return
 		}
+
 		statusCode := c.Response.StatusCode
-		c.Engine().Logger().Sugar().Infof("[depth]:%v [url]:%v [status]:%v ",
-			c.GetDepth(), c.GetRequest().URL.String(), statusCode)
+		logger.Info("logging", zap.Int("statusCode", statusCode))
 		return err
 	}
 }

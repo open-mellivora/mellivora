@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/open-mellivora/mellivora"
-
 	"github.com/go-playground/assert/v2"
+
+	"github.com/open-mellivora/mellivora"
 )
 
 func TestDownLimiter(t *testing.T) {

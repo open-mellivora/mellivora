@@ -18,13 +18,3 @@ func (m *middleware) Next(handleFunc MiddlewareFunc) MiddlewareFunc {
 func NewMiddleware(next func(MiddlewareFunc) MiddlewareFunc) *middleware {
 	return &middleware{next: next}
 }
-
-var middlewares = make(map[string]Middleware)
-
-func RegisterMiddleware(name string, m Middleware) {
-	middlewares[name] = m
-}
-
-func GetMiddleware(name string) Middleware {
-	return middlewares[name]
-}

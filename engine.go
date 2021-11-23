@@ -1,16 +1,16 @@
 package mellivora
 
 import (
-	"log"
+	"errors"
 	"net/http"
 	"os"
 	"os/signal"
 	"reflect"
-	"strings"
 	"sync"
 
-	"github.com/open-mellivora/mellivora/library/limter"
 	"go.uber.org/zap"
+
+	"github.com/open-mellivora/mellivora/library/limter"
 )
 
 // Engine is the top-level framework instance.
@@ -25,18 +25,17 @@ type Engine struct {
 }
 
 // NewEngine creates an instance of Engine.
-func NewEngine(concurrency int64) *Engine {
+func NewEngine(concurrency uint64) *Engine {
 	if concurrency <= 0 {
 		concurrency = 1
 	}
-	logger, _ := zap.NewProduction()
 	core := &Engine{
 		wg:                 sync.WaitGroup{},
 		scheduler:          NewLifoScheduler(),
 		contextSerializer:  NewContextSerializer(),
 		concurrencyLimiter: limter.NewConcurrencyLimiter(concurrency),
 		filter:             NewBloomFilter(),
-		logger:             logger,
+		logger:             zap.NewExample(),
 	}
 	return core
 }
@@ -74,7 +73,7 @@ func (e *Engine) applyMiddleware(middlewares ...Middleware) MiddlewareFunc {
 func (e *Engine) runC(c *Context, middlewareFunc MiddlewareFunc) {
 	defer func() {
 		if r := recover(); r != nil {
-			e.Logger().Sugar().Errorf("Recovery: %+v", r)
+			e.Logger().Error("Recover", zap.Any("recover", r))
 		}
 	}()
 
@@ -87,7 +86,7 @@ func (e *Engine) runC(c *Context, middlewareFunc MiddlewareFunc) {
 	}
 	var task Task
 	if task = c.handler(c); task == nil {
-		e.Logger().Sugar().Warnf("Empty %s Task", c.GetRequest().URL.String())
+		e.Logger().Warn("Empty Task", zap.String("url", c.GetRequest().URL.String()))
 	}
 	for i := 0; i < len(task.Requests()); i++ {
 		e.request(c, task.Requests()[i], task.Handler(), task.RequestOptions()...)
@@ -102,16 +101,16 @@ func (e *Engine) Run(spider Spider) {
 		if !ok {
 			continue
 		}
-		e.Logger().Sugar().Infof("Middleware %s Start", getTypeName(m))
+		e.Logger().Info("Middleware Start", zap.String("Name", getTypeName(m)))
 		starter.Start()
 	}
 
-	logs := make([]string, len(e.middlewares))
+	names := make([]string, len(e.middlewares))
 	for i, m := range e.middlewares {
-		logs[i] = getTypeName(m)
+		names[i] = getTypeName(m)
 	}
 
-	e.Logger().Sugar().Infof("Use spider middlewares: \n[%s]", strings.Join(logs, ",\n"))
+	e.Logger().Info("Use spider middlewares", zap.Strings("names", names))
 
 	middlewareFunc := e.applyMiddleware(append(e.middlewares, NewDownloader())...)
 
@@ -124,7 +123,8 @@ func (e *Engine) Run(spider Spider) {
 			var c *Context
 			var err error
 			if c, err = e.contextSerializer.Unmarshal(contextText); err != nil {
-				e.Logger().Sugar().Errorf("unmarshal c error,err:%s", err.Error())
+				e.Logger().Error("unmarshal c error", zap.Error(err))
+				e.wg.Done()
 				continue
 			}
 			c.core = e
@@ -173,9 +173,10 @@ func (e *Engine) Close() {
 			continue
 		}
 		closer.Close()
-		e.Logger().Sugar().Infof("Middleware %s Closed", getTypeName(m))
+		e.Logger().Info("Middleware Closed", zap.String("name", getTypeName(m)))
 	}
 	e.Logger().Info("Engine Closed")
+	e.Logger().Sync()
 }
 
 // Shutdown stops the server gracefully.
@@ -185,11 +186,11 @@ func (e *Engine) Shutdown() {
 	signal.Notify(quit, os.Interrupt)
 	go func() {
 		sig := <-quit
-		log.Println("Shutting down, caused by", sig)
+		e.Logger().Info("hutting down, caused by", zap.String("signal", sig.String()))
 		close(done)
 	}()
 	<-done
-	log.Println("Graceful shutdown.")
+	e.Logger().Info("Graceful shutdown")
 }
 
 func getTypeName(i interface{}) string {
@@ -199,6 +200,10 @@ func getTypeName(i interface{}) string {
 // request create a request
 func (e *Engine) request(preCtx *Context, r *http.Request, handler HandleFunc,
 	options ...RequestOptionsFunc) (err error) {
+	if r.URL.Scheme == "" {
+		err = errors.New("empty scheme")
+		return
+	}
 
 	ctx := NewContext(e, r, handler)
 
