@@ -13,7 +13,7 @@ require (
 	github.com/smallnest/queue v0.0.0-20201001101855-6d53a4f556a1
 	github.com/valyala/bytebufferpool v1.0.0
 	go.uber.org/zap v1.19.1
-	golang.org/x/net v0.0.0-20220722155237-a158d28d115b
-	golang.org/x/text v0.3.8
+	golang.org/x/net v0.7.0
+	golang.org/x/text v0.7.0
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 )
